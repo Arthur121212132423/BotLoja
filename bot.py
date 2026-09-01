@@ -53,6 +53,33 @@ CARGO_ATENDENTE = 1489876080260026461
 
 
 # =========================================================
+# DESCRIÇÃO DO CANAL "COMO FUNCIONA"
+# =========================================================
+
+DESCRICAO_CANAL_INFORMACOES = (
+    "🛒 COMO FUNCIONA A LOJA\n\n"
+    "1️⃣ ESCOLHA SEU PRODUTO\n"
+    "Confira os produtos disponíveis e escolha a otimização "
+    "ou serviço que deseja adquirir.\n\n"
+    "2️⃣ ABRA SEU TICKET\n"
+    "Clique no botão de compra para abrir um atendimento "
+    "privado com a equipe.\n\n"
+    "3️⃣ REALIZE O PAGAMENTO\n"
+    "O pagamento é realizado via PIX de forma rápida e segura.\n\n"
+    "4️⃣ CONFIRMAÇÃO AUTOMÁTICA\n"
+    "Após o pagamento ser aprovado pelo Mercado Pago, "
+    "o sistema identifica automaticamente a confirmação.\n\n"
+    "5️⃣ RECEBA SEU ATENDIMENTO\n"
+    "Após a confirmação, seu pedido será liberado e você "
+    "receberá as instruções necessárias para continuar o atendimento.\n\n"
+    "🕐 HORÁRIO DE ATENDIMENTO: 13:00 ÀS 21:00\n"
+    "💳 PAGAMENTO: PIX\n"
+    "🎫 ATENDIMENTO: SISTEMA DE TICKETS\n"
+    "🔒 CADA TICKET É PRIVADO E VISÍVEL PARA O CLIENTE E A EQUIPE."
+)
+
+
+# =========================================================
 # IMAGENS DO TUTORIAL
 # =========================================================
 
@@ -201,6 +228,69 @@ def salvar_pagamentos():
 
     except Exception as erro:
         print(f"❌ Erro salvando pagamentos: {erro}")
+
+
+# =========================================================
+# ATUALIZAR DESCRIÇÃO DO CANAL COMO FUNCIONA
+# =========================================================
+
+async def atualizar_descricao_canal_informacoes():
+    canal = bot.get_channel(CANAL_INFORMACOES)
+
+    if canal is None:
+        try:
+            canal = await bot.fetch_channel(
+                CANAL_INFORMACOES
+            )
+
+        except Exception as erro:
+            print(
+                f"❌ Não consegui encontrar o canal "
+                f"Como Funciona: {erro}"
+            )
+            return
+
+    if not isinstance(canal, discord.TextChannel):
+        print(
+            f"❌ O ID {CANAL_INFORMACOES} "
+            "não é um canal de texto."
+        )
+        return
+
+    try:
+        if canal.topic == DESCRICAO_CANAL_INFORMACOES:
+            print(
+                "ℹ️ Descrição do canal Como Funciona "
+                "já está atualizada."
+            )
+            return
+
+        await canal.edit(
+            topic=DESCRICAO_CANAL_INFORMACOES,
+            reason="Atualização automática da descrição da loja",
+        )
+
+        print(
+            "✅ Descrição do canal Como Funciona "
+            "atualizada com sucesso."
+        )
+
+    except discord.Forbidden:
+        print(
+            "❌ Não tenho permissão para alterar "
+            "a descrição do canal Como Funciona."
+        )
+
+    except discord.NotFound:
+        print(
+            "❌ Canal Como Funciona não encontrado."
+        )
+
+    except Exception as erro:
+        print(
+            f"❌ Erro atualizando descrição do canal "
+            f"Como Funciona: {erro}"
+        )
 
 
 # =========================================================
@@ -2098,6 +2188,8 @@ class LojaBot(commands.Bot):
 
         await atualizar_status_loja()
 
+        await atualizar_descricao_canal_informacoes()
+
         if not atualizar_status_loja_loop.is_running():
 
             atualizar_status_loja_loop.start()
@@ -2128,6 +2220,7 @@ class LojaBot(commands.Bot):
         )
 
         await atualizar_status_loja()
+        await atualizar_descricao_canal_informacoes()
 
 
 bot = LojaBot()
@@ -2401,4 +2494,3 @@ if __name__ == "__main__":
                 f"❌ Erro fatal ao iniciar "
                 f"o bot: {erro}"
             )
-````
