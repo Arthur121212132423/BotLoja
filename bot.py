@@ -1,3 +1,4 @@
+````python
 import asyncio
 import base64
 import io
@@ -37,7 +38,6 @@ CANAL_CURSO = 1544128281408839792
 CANAL_INFORMACOES = 1544129948359327794
 CANAL_FEEDBACK = 1489876080771727473
 
-# Canal onde aparece o funcionamento da loja
 CANAL_STATUS_LOJA = 1544187237648826408
 
 
@@ -50,7 +50,6 @@ CARGO_OTIMIZACAO = 1539751475876597890
 CARGO_VITALICIA = 1544129229883445299
 CARGO_CURSO = 1544128542487355392
 
-# Cargo que será mencionado quando um ticket for aberto
 CARGO_ATENDENTE = 1489876080260026461
 
 
@@ -91,21 +90,48 @@ PRODUTOS = {
     "basica": {
         "nome": "Otimização Básica",
         "preco": 15.00,
+        "descricao": (
+            "Uma otimização focada em melhorar o desempenho "
+            "do seu computador e deixar seus jogos mais leves. "
+            "São realizados ajustes para buscar melhor estabilidade, "
+            "resposta e aproveitamento dos recursos do sistema."
+        ),
         "cargos": [CARGO_COMUM, CARGO_OTIMIZACAO],
     },
+
     "completa": {
         "nome": "Otimização Completa",
         "preco": 30.00,
+        "descricao": (
+            "Uma otimização mais completa para quem busca extrair "
+            "mais desempenho do computador. Inclui ajustes de sistema "
+            "e configurações voltadas para desempenho, estabilidade "
+            "e uma melhor experiência durante os jogos."
+        ),
         "cargos": [CARGO_COMUM, CARGO_OTIMIZACAO],
     },
+
     "vitalicia": {
         "nome": "Otimização Completa Vitalícia",
         "preco": 60.00,
+        "descricao": (
+            "Tenha acesso à nossa otimização completa com suporte "
+            "para futuras otimizações. Ideal para quem quer manter "
+            "o computador sempre ajustado e contar com suporte "
+            "quando forem necessárias novas configurações."
+        ),
         "cargos": [CARGO_COMUM, CARGO_VITALICIA],
     },
+
     "curso": {
         "nome": "Aprenda a Otimizar",
         "preco": 100.00,
+        "descricao": (
+            "Aprenda a realizar suas próprias otimizações e entender "
+            "melhor as configurações do computador. O curso foi pensado "
+            "para quem quer aprender como melhorar o desempenho do PC "
+            "e fazer ajustes de forma mais consciente."
+        ),
         "cargos": [CARGO_COMUM, CARGO_CURSO],
     },
 }
@@ -1442,9 +1468,11 @@ async def criar_ticket(
         title="🛒 PEDIDO",
         description=(
             f"📦 **Produto:** "
-            f"{produto['nome']}\n"
+            f"{produto['nome']}\n\n"
             f"💰 **Valor:** "
-            f"R${produto['preco']:.2f}\n"
+            f"R${produto['preco']:.2f}\n\n"
+            f"📋 **Sobre o produto:**\n"
+            f"{produto['descricao']}\n\n"
             "🟡 **Status:** Aguardando pagamento\n\n"
             "Clique em **💳 Pagar com PIX** "
             "para gerar seu pagamento.\n\n"
@@ -2155,11 +2183,22 @@ async def painel_otimizacao(
     embed = discord.Embed(
         title="⚙️ TK OTIMIZAÇÃO",
         description=(
-            "Escolha a otimização que deseja adquirir.\n\n"
-            "⚙️ **Otimização Básica** — R$15,00\n"
-            "🚀 **Otimização Completa** — R$30,00\n\n"
-            "Após escolher, será criado um ticket "
-            "privado para você."
+            "Escolha a otimização que melhor atende "
+            "às necessidades do seu computador.\n\n"
+
+            "⚙️ **Otimização Básica — R$15,00**\n"
+            "Uma otimização focada em melhorar o desempenho "
+            "do sistema, buscando mais estabilidade e uma "
+            "melhor experiência nos jogos.\n\n"
+
+            "🚀 **Otimização Completa — R$30,00**\n"
+            "Uma otimização mais completa, com ajustes "
+            "voltados para desempenho, estabilidade e "
+            "melhor aproveitamento do computador.\n\n"
+
+            "🎫 Após escolher um produto, será criado um "
+            "ticket privado para realizar o pagamento "
+            "e receber o atendimento."
         ),
         color=discord.Color.blurple(),
     )
@@ -2189,13 +2228,22 @@ async def painel_vitalicia(
 ):
 
     embed = discord.Embed(
-        title="♾️ OTIMIZAÇÃO VITALÍCIA",
+        title="♾️ OTIMIZAÇÃO COMPLETA VITALÍCIA",
         description=(
-            "Tenha acesso à **Otimização "
-            "Completa Vitalícia**.\n\n"
+            "Tenha acesso à nossa **Otimização Completa** "
+            "com suporte para futuras otimizações.\n\n"
+
             "♾️ **Valor: R$60,00**\n\n"
-            "Clique no botão abaixo para abrir "
-            "seu ticket."
+
+            "Com a versão vitalícia, você conta com uma "
+            "solução completa para melhorar o desempenho "
+            "do computador e ainda pode receber suporte "
+            "para futuras otimizações quando necessário.\n\n"
+
+            "💳 O pagamento é realizado de forma segura "
+            "via PIX, com confirmação automática.\n\n"
+
+            "👇 **Clique no botão abaixo para abrir seu ticket.**"
         ),
         color=discord.Color.green(),
     )
@@ -2227,10 +2275,23 @@ async def painel_curso(
     embed = discord.Embed(
         title="🎓 APRENDA A OTIMIZAR",
         description=(
-            "Aprenda a otimizar seu próprio computador.\n\n"
+            "Quer aprender a fazer suas próprias otimizações?\n\n"
+
             "🎓 **Curso completo — R$100,00**\n\n"
-            "Clique no botão abaixo para adquirir "
-            "o curso."
+
+            "Aprenda a entender melhor as configurações "
+            "do computador e como realizar ajustes voltados "
+            "para desempenho e estabilidade.\n\n"
+
+            "📚 O objetivo é ensinar você a compreender "
+            "as principais configurações e realizar suas "
+            "próprias otimizações de maneira mais consciente.\n\n"
+
+            "💳 Após escolher o curso, será criado um ticket "
+            "privado para realizar o pagamento e receber "
+            "as informações de acesso.\n\n"
+
+            "👇 **Clique no botão abaixo para adquirir o curso.**"
         ),
         color=discord.Color.blurple(),
     )
@@ -2341,3 +2402,4 @@ if __name__ == "__main__":
                 f"❌ Erro fatal ao iniciar "
                 f"o bot: {erro}"
             )
+````
