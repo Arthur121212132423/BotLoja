@@ -1,10 +1,13 @@
+````python
 import asyncio
 import base64
 import io
 import json
 import os
 import uuid
+from datetime import datetime
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 import discord
 import requests
@@ -20,6 +23,12 @@ NOME_LOJA = "Tk Otimização"
 LINK_ANYDESK = "https://anydesk.com/pt/downloads"
 ARQUIVO_PAGAMENTOS = "pagamentos.json"
 
+# Horário oficial da loja
+FUSO_BRASILIA = ZoneInfo("America/Sao_Paulo")
+
+HORA_ABERTURA = 13
+HORA_FECHAMENTO = 21
+
 
 # =========================================================
 # IDS DOS CANAIS
@@ -30,6 +39,9 @@ CANAL_VITALICIA = 1544128250635358240
 CANAL_CURSO = 1544128281408839792
 CANAL_INFORMACOES = 1544129948359327794
 CANAL_FEEDBACK = 1489876080771727473
+
+# Canal do status da loja
+CANAL_STATUS_LOJA = 1539753330585112576
 
 
 # =========================================================
@@ -119,6 +131,7 @@ PRODUTOS = {
 # =========================================================
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
 MERCADOPAGO_ACCESS_TOKEN = os.getenv(
     "MERCADOPAGO_ACCESS_TOKEN"
 )
@@ -214,6 +227,120 @@ def salvar_pagamentos():
         print(
             f"❌ Erro salvando pagamentos: {erro}"
         )
+
+
+# =========================================================
+# STATUS AUTOMÁTICO DA LOJA
+# =========================================================
+
+def loja_esta_aberta():
+
+    agora = datetime.now(
+        FUSO_BRASILIA
+    )
+
+    return (
+        HORA_ABERTURA
+        <= agora.hour
+        < HORA_FECHAMENTO
+    )
+
+
+async def atualizar_status_loja():
+
+    canal = bot.get_channel(
+        CANAL_STATUS_LOJA
+    )
+
+    if canal is None:
+
+        try:
+
+            canal = await bot.fetch_channel(
+                CANAL_STATUS_LOJA
+            )
+
+        except Exception as erro:
+
+            print(
+                "❌ Não consegui encontrar "
+                f"o canal de status da loja: {erro}"
+            )
+
+            return
+
+    if not isinstance(
+        canal,
+        discord.TextChannel,
+    ):
+
+        print(
+            "❌ O canal de status da loja "
+            "não é um canal de texto."
+        )
+
+        return
+
+    if loja_esta_aberta():
+
+        novo_nome = "✅│Loja-on"
+
+    else:
+
+        novo_nome = "❌│Loja-off"
+
+    if canal.name == novo_nome:
+
+        return
+
+    try:
+
+        await canal.edit(
+            name=novo_nome,
+            reason="Atualização automática do status da loja",
+        )
+
+        agora = datetime.now(
+            FUSO_BRASILIA
+        )
+
+        print(
+            "🏪 Status da loja atualizado: "
+            f"{novo_nome} | "
+            f"{agora.strftime('%d/%m/%Y %H:%M:%S')} "
+            "Brasília"
+        )
+
+    except discord.Forbidden:
+
+        print(
+            "❌ Não tenho permissão para "
+            "alterar o nome do canal da loja."
+        )
+
+    except discord.NotFound:
+
+        print(
+            "❌ Canal de status da loja não encontrado."
+        )
+
+    except Exception as erro:
+
+        print(
+            f"❌ Erro atualizando status da loja: {erro}"
+        )
+
+
+@tasks.loop(seconds=30)
+async def atualizar_status_loja_loop():
+
+    await atualizar_status_loja()
+
+
+@atualizar_status_loja_loop.before_loop
+async def antes_de_atualizar_status_loja():
+
+    await bot.wait_until_ready()
 
 
 # =========================================================
@@ -422,10 +549,6 @@ def criar_pagamento_pix(
         )
     )
 
-    # =====================================================
-    # PIX ORIGINAL DO MERCADO PAGO
-    # =====================================================
-
     pix_copia_cola = (
         transaction_data.get(
             "qr_code"
@@ -437,9 +560,6 @@ def criar_pagamento_pix(
             "qr_code_base64"
         )
     )
-
-    # NÃO USAMOS ticket_url.
-    # A opção 3 de pagamento foi removida.
 
     print(
         f"💳 Pagamento criado: {payment_id}"
@@ -475,10 +595,6 @@ def criar_pagamento_pix(
             "📏 Tamanho do Copia e Cola: "
             f"{len(pix_copia_cola)} caracteres"
         )
-
-    # =====================================================
-    # VERIFICAÇÃO
-    # =====================================================
 
     if not pix_copia_cola:
 
@@ -703,10 +819,6 @@ class EmailPagamentoModal(Modal):
 
         salvar_pagamentos()
 
-        # =================================================
-        # EMBED PIX
-        # =================================================
-
         embed = discord.Embed(
             title="💳 PAGAMENTO VIA PIX",
             description=(
@@ -723,10 +835,6 @@ class EmailPagamentoModal(Modal):
             ),
             color=discord.Color.gold(),
         )
-
-        # =================================================
-        # COPIA E COLA
-        # =================================================
 
         embed.add_field(
             name="📋 Pix Copia e Cola",
@@ -745,10 +853,6 @@ class EmailPagamentoModal(Modal):
             )
         )
 
-        # =================================================
-        # QR CODE
-        # =================================================
-
         arquivo = None
 
         qr_base64 = resultado.get(
@@ -758,9 +862,6 @@ class EmailPagamentoModal(Modal):
         if qr_base64:
 
             try:
-
-                # Remove somente o prefixo caso exista.
-                # O conteúdo Base64 não é modificado.
 
                 if qr_base64.startswith(
                     "data:image"
@@ -795,10 +896,6 @@ class EmailPagamentoModal(Modal):
                     "❌ Erro processando "
                     f"QR Code: {erro}"
                 )
-
-        # =================================================
-        # ENVIAR PIX
-        # =================================================
 
         try:
 
@@ -2163,9 +2260,30 @@ class LojaBot(commands.Bot):
             f"{len(self.guilds)}"
         )
 
+        agora = datetime.now(
+            FUSO_BRASILIA
+        )
+
+        print(
+            "🕐 Horário de Brasília: "
+            f"{agora.strftime('%d/%m/%Y %H:%M:%S')}"
+        )
+
         print(
             "========================================"
         )
+
+        # Atualiza o status da loja imediatamente
+        # ao iniciar/reconectar o bot.
+        await atualizar_status_loja()
+
+        if not atualizar_status_loja_loop.is_running():
+
+            atualizar_status_loja_loop.start()
+
+            print(
+                "🏪 Status automático da loja iniciado."
+            )
 
         if not verificar_pagamentos.is_running():
 
@@ -2187,6 +2305,8 @@ class LojaBot(commands.Bot):
         print(
             "🔄 Conexão com Discord restaurada."
         )
+
+        await atualizar_status_loja()
 
 
 bot = LojaBot()
@@ -2432,3 +2552,4 @@ if __name__ == "__main__":
                 f"❌ Erro fatal ao iniciar "
                 f"o bot: {erro}"
             )
+````
