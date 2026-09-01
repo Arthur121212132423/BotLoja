@@ -20,6 +20,7 @@ NOME_LOJA = "Tk Otimização"
 LINK_ANYDESK = "https://anydesk.com/pt/downloads"
 ARQUIVO_PAGAMENTOS = "pagamentos.json"
 
+
 # =========================================================
 # IDS DOS CANAIS
 # =========================================================
@@ -30,6 +31,7 @@ CANAL_CURSO = 1544128281408839792
 CANAL_INFORMACOES = 1544129948359327794
 CANAL_FEEDBACK = 1489876080771727473
 
+
 # =========================================================
 # IDS DOS CARGOS
 # =========================================================
@@ -38,6 +40,7 @@ CARGO_COMUM = 1489876079840591935
 CARGO_OTIMIZACAO = 1539751475876597890
 CARGO_VITALICIA = 1544129229883445299
 CARGO_CURSO = 1544128542487355392
+
 
 # =========================================================
 # IMAGENS DO TUTORIAL
@@ -67,6 +70,7 @@ TUTORIAL_IMG_3 = (
     "&=&format=webp&quality=lossless&width=1280&height=683"
 )
 
+
 # =========================================================
 # PRODUTOS
 # =========================================================
@@ -75,37 +79,61 @@ PRODUTOS = {
     "basica": {
         "nome": "Otimização Básica",
         "preco": 15.00,
-        "cargos": [CARGO_COMUM, CARGO_OTIMIZACAO],
+        "cargos": [
+            CARGO_COMUM,
+            CARGO_OTIMIZACAO,
+        ],
     },
+
     "completa": {
         "nome": "Otimização Completa",
         "preco": 30.00,
-        "cargos": [CARGO_COMUM, CARGO_OTIMIZACAO],
+        "cargos": [
+            CARGO_COMUM,
+            CARGO_OTIMIZACAO,
+        ],
     },
+
     "vitalicia": {
         "nome": "Otimização Completa Vitalícia",
         "preco": 60.00,
-        "cargos": [CARGO_COMUM, CARGO_VITALICIA],
+        "cargos": [
+            CARGO_COMUM,
+            CARGO_VITALICIA,
+        ],
     },
+
     "curso": {
         "nome": "Aprenda a Otimizar",
         "preco": 100.00,
-        "cargos": [CARGO_COMUM, CARGO_CURSO],
+        "cargos": [
+            CARGO_COMUM,
+            CARGO_CURSO,
+        ],
     },
 }
+
 
 # =========================================================
 # VARIÁVEIS DE AMBIENTE
 # =========================================================
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
+MERCADOPAGO_ACCESS_TOKEN = os.getenv(
+    "MERCADOPAGO_ACCESS_TOKEN"
+)
 
 if not DISCORD_TOKEN:
-    print("❌ ERRO: DISCORD_TOKEN não configurado.")
+    print(
+        "❌ ERRO: DISCORD_TOKEN não configurado."
+    )
 
 if not MERCADOPAGO_ACCESS_TOKEN:
-    print("⚠️ AVISO: MERCADOPAGO_ACCESS_TOKEN não configurado.")
+    print(
+        "⚠️ AVISO: MERCADOPAGO_ACCESS_TOKEN "
+        "não configurado."
+    )
+
 
 # =========================================================
 # INTENTS
@@ -116,20 +144,26 @@ intents.guilds = True
 intents.members = True
 intents.message_content = True
 
+
 # =========================================================
 # PAGAMENTOS
 # =========================================================
 
 def carregar_pagamentos():
-    if not os.path.exists(ARQUIVO_PAGAMENTOS):
+
+    if not os.path.exists(
+        ARQUIVO_PAGAMENTOS
+    ):
         return {}
 
     try:
+
         with open(
             ARQUIVO_PAGAMENTOS,
             "r",
             encoding="utf-8",
         ) as arquivo:
+
             dados = json.load(arquivo)
 
         if isinstance(dados, dict):
@@ -138,7 +172,11 @@ def carregar_pagamentos():
         return {}
 
     except Exception as erro:
-        print(f"❌ Erro carregando pagamentos: {erro}")
+
+        print(
+            f"❌ Erro carregando pagamentos: {erro}"
+        )
+
         return {}
 
 
@@ -146,14 +184,19 @@ pagamentos = carregar_pagamentos()
 
 
 def salvar_pagamentos():
+
     try:
-        arquivo_temporario = f"{ARQUIVO_PAGAMENTOS}.tmp"
+
+        arquivo_temporario = (
+            f"{ARQUIVO_PAGAMENTOS}.tmp"
+        )
 
         with open(
             arquivo_temporario,
             "w",
             encoding="utf-8",
         ) as arquivo:
+
             json.dump(
                 pagamentos,
                 arquivo,
@@ -167,7 +210,10 @@ def salvar_pagamentos():
         )
 
     except Exception as erro:
-        print(f"❌ Erro salvando pagamentos: {erro}")
+
+        print(
+            f"❌ Erro salvando pagamentos: {erro}"
+        )
 
 
 # =========================================================
@@ -181,33 +227,56 @@ def criar_pagamento_pix(
     usuario_id: int,
     email: str,
 ):
+
     if not MERCADOPAGO_ACCESS_TOKEN:
-        print("❌ MERCADOPAGO_ACCESS_TOKEN não configurado.")
+
+        print(
+            "❌ MERCADOPAGO_ACCESS_TOKEN "
+            "não configurado."
+        )
+
         return None
 
     email = email.strip().lower()
 
     if "@" not in email:
-        print("❌ E-mail inválido.")
+
+        print(
+            "❌ E-mail inválido."
+        )
+
         return None
 
-    parte_dominio = email.split("@", 1)[1]
+    parte_dominio = email.split(
+        "@",
+        1,
+    )[1]
 
     if "." not in parte_dominio:
-        print("❌ E-mail inválido.")
+
+        print(
+            "❌ E-mail inválido."
+        )
+
         return None
 
-    url = "https://api.mercadopago.com/v1/payments"
+    url = (
+        "https://api.mercadopago.com/v1/payments"
+    )
 
     external_reference = (
         f"discord-{canal_id}-{usuario_id}-"
         f"{uuid.uuid4().hex}"
     )
 
-    idempotency_key = str(uuid.uuid4())
+    idempotency_key = str(
+        uuid.uuid4()
+    )
 
     headers = {
-        "Authorization": f"Bearer {MERCADOPAGO_ACCESS_TOKEN}",
+        "Authorization": (
+            f"Bearer {MERCADOPAGO_ACCESS_TOKEN}"
+        ),
         "Content-Type": "application/json",
         "Accept": "application/json",
         "X-Idempotency-Key": idempotency_key,
@@ -225,15 +294,36 @@ def criar_pagamento_pix(
         },
     }
 
-    print("========================================")
-    print("💳 CRIANDO PAGAMENTO PIX")
-    print(f"📦 Produto: {produto}")
-    print(f"💰 Valor: R${preco:.2f}")
-    print(f"📧 E-mail: {email}")
-    print(f"🔗 Referência: {external_reference}")
-    print("========================================")
+    print(
+        "========================================"
+    )
+
+    print(
+        "💳 CRIANDO PAGAMENTO PIX"
+    )
+
+    print(
+        f"📦 Produto: {produto}"
+    )
+
+    print(
+        f"💰 Valor: R${preco:.2f}"
+    )
+
+    print(
+        f"📧 E-mail: {email}"
+    )
+
+    print(
+        f"🔗 Referência: {external_reference}"
+    )
+
+    print(
+        "========================================"
+    )
 
     try:
+
         resposta = requests.post(
             url,
             headers=headers,
@@ -242,27 +332,45 @@ def criar_pagamento_pix(
         )
 
     except requests.RequestException as erro:
+
         print(
-            "❌ Erro de conexão com Mercado Pago: "
-            f"{erro}"
+            "❌ Erro de conexão com "
+            f"Mercado Pago: {erro}"
         )
+
         return None
 
     print(
-        f"📡 Mercado Pago respondeu: "
+        "📡 Mercado Pago respondeu: "
         f"{resposta.status_code}"
     )
 
     try:
+
         pagamento = resposta.json()
 
     except ValueError:
-        print("❌ Mercado Pago retornou JSON inválido.")
-        print(resposta.text)
+
+        print(
+            "❌ Mercado Pago retornou "
+            "JSON inválido."
+        )
+
+        print(
+            resposta.text
+        )
+
         return None
 
-    if resposta.status_code not in (200, 201):
-        print("❌ ERRO MERCADO PAGO:")
+    if resposta.status_code not in (
+        200,
+        201,
+    ):
+
+        print(
+            "❌ ERRO MERCADO PAGO:"
+        )
+
         print(
             json.dumps(
                 pagamento,
@@ -270,15 +378,20 @@ def criar_pagamento_pix(
                 ensure_ascii=False,
             )
         )
+
         return None
 
-    payment_id = pagamento.get("id")
+    payment_id = pagamento.get(
+        "id"
+    )
 
     if not payment_id:
+
         print(
             "❌ Mercado Pago não retornou "
             "o ID do pagamento."
         )
+
         print(
             json.dumps(
                 pagamento,
@@ -286,75 +399,98 @@ def criar_pagamento_pix(
                 ensure_ascii=False,
             )
         )
+
         return None
 
-    status = pagamento.get("status")
-    status_detail = pagamento.get("status_detail")
+    status = pagamento.get(
+        "status"
+    )
+
+    status_detail = pagamento.get(
+        "status_detail"
+    )
 
     point_of_interaction = pagamento.get(
         "point_of_interaction",
         {},
     )
 
-    transaction_data = point_of_interaction.get(
-        "transaction_data",
-        {},
+    transaction_data = (
+        point_of_interaction.get(
+            "transaction_data",
+            {},
+        )
     )
 
     # =====================================================
-    # PIX RETORNADO PELO MERCADO PAGO
+    # PIX ORIGINAL DO MERCADO PAGO
     # =====================================================
 
-    pix_copia_cola = transaction_data.get("qr_code")
-
-    qr_code_base64 = transaction_data.get(
-        "qr_code_base64"
+    pix_copia_cola = (
+        transaction_data.get(
+            "qr_code"
+        )
     )
 
-    ticket_url = transaction_data.get(
-        "ticket_url"
+    qr_code_base64 = (
+        transaction_data.get(
+            "qr_code_base64"
+        )
     )
 
-    print(f"💳 Pagamento criado: {payment_id}")
-    print(f"📊 Status: {status}")
+    # NÃO USAMOS ticket_url.
+    # A opção 3 de pagamento foi removida.
+
     print(
-        f"📊 Status detail: "
+        f"💳 Pagamento criado: {payment_id}"
+    )
+
+    print(
+        f"📊 Status: {status}"
+    )
+
+    print(
+        "📊 Status detail: "
         f"{status_detail}"
     )
+
     print(
         "💳 Método: "
         f"{pagamento.get('payment_method_id')}"
     )
+
     print(
         "📋 Pix Copia e Cola encontrado: "
         f"{bool(pix_copia_cola)}"
     )
+
     print(
         "🖼️ QR Code encontrado: "
         f"{bool(qr_code_base64)}"
     )
-    print(
-        "🔗 Ticket URL encontrado: "
-        f"{bool(ticket_url)}"
-    )
 
     if pix_copia_cola:
+
         print(
             "📏 Tamanho do Copia e Cola: "
             f"{len(pix_copia_cola)} caracteres"
         )
 
     # =====================================================
-    # NÃO ALTERAR O QR CODE
+    # VERIFICAÇÃO
     # =====================================================
 
     if not pix_copia_cola:
+
         print(
             "❌ Mercado Pago criou o pagamento, "
             "mas não retornou qr_code."
         )
 
-        print("📦 RESPOSTA COMPLETA:")
+        print(
+            "📦 RESPOSTA COMPLETA:"
+        )
+
         print(
             json.dumps(
                 pagamento,
@@ -372,7 +508,6 @@ def criar_pagamento_pix(
         "external_reference": external_reference,
         "qr_code": pix_copia_cola,
         "qr_code_base64": qr_code_base64,
-        "ticket_url": ticket_url,
     }
 
 
@@ -380,7 +515,10 @@ def criar_pagamento_pix(
 # MERCADO PAGO — CONSULTAR PAGAMENTO
 # =========================================================
 
-def consultar_pagamento(payment_id: str):
+def consultar_pagamento(
+    payment_id: str,
+):
+
     if not MERCADOPAGO_ACCESS_TOKEN:
         return None
 
@@ -397,6 +535,7 @@ def consultar_pagamento(payment_id: str):
     }
 
     try:
+
         resposta = requests.get(
             url,
             headers=headers,
@@ -404,31 +543,40 @@ def consultar_pagamento(payment_id: str):
         )
 
     except requests.RequestException as erro:
+
         print(
             f"❌ Erro consultando pagamento "
             f"{payment_id}: {erro}"
         )
+
         return None
 
     if resposta.status_code != 200:
+
         print(
             f"❌ Erro consultando pagamento "
             f"{payment_id}: "
             f"{resposta.status_code}"
         )
+
         return None
 
     try:
+
         dados = resposta.json()
 
     except ValueError:
+
         print(
             f"❌ JSON inválido no pagamento "
             f"{payment_id}."
         )
+
         return None
 
-    return dados.get("status")
+    return dados.get(
+        "status"
+    )
 
 
 # =========================================================
@@ -442,7 +590,9 @@ def identificar_produto_do_canal(
     topic = canal.topic or ""
 
     for chave in PRODUTOS:
+
         if f"ProdutoID: {chave}" in topic:
+
             return chave
 
     return None
@@ -454,7 +604,11 @@ def identificar_produto_do_canal(
 
 class EmailPagamentoModal(Modal):
 
-    def __init__(self, produto_id: str):
+    def __init__(
+        self,
+        produto_id: str,
+    ):
+
         super().__init__(
             title="Pagamento via PIX"
         )
@@ -468,21 +622,26 @@ class EmailPagamentoModal(Modal):
             max_length=100,
         )
 
-        self.add_item(self.email)
+        self.add_item(
+            self.email
+        )
 
     async def on_submit(
         self,
         interaction: discord.Interaction,
     ):
+
         produto = PRODUTOS.get(
             self.produto_id
         )
 
         if not produto:
+
             await interaction.response.send_message(
                 "❌ Produto não encontrado.",
                 ephemeral=True,
             )
+
             return
 
         await interaction.response.defer(
@@ -499,26 +658,30 @@ class EmailPagamentoModal(Modal):
         )
 
         if not resultado:
+
             await interaction.followup.send(
                 "❌ Não consegui gerar o PIX.\n\n"
-                "Verifique o Access Token do Mercado Pago "
-                "e o e-mail informado.",
+                "Verifique o Access Token do "
+                "Mercado Pago e o e-mail informado.",
                 ephemeral=True,
             )
+
             return
 
         pagamento_id = resultado["id"]
-        pix = resultado.get("qr_code")
-        ticket_url = resultado.get(
-            "ticket_url"
+
+        pix = resultado.get(
+            "qr_code"
         )
 
         if not pix:
+
             await interaction.followup.send(
                 "❌ O Mercado Pago criou o pagamento, "
                 "mas não retornou o Pix Copia e Cola.",
                 ephemeral=True,
             )
+
             return
 
         pagamentos[pagamento_id] = {
@@ -553,34 +716,27 @@ class EmailPagamentoModal(Modal):
                 f"R${produto['preco']:.2f}\n\n"
                 "🟡 **Status:** "
                 "Aguardando pagamento\n\n"
-                "Escaneie o QR Code ou use o "
-                "**Pix Copia e Cola**."
+                "Escaneie o **QR Code** ou "
+                "use o **Pix Copia e Cola**.\n\n"
+                "Após o pagamento, a confirmação "
+                "será automática."
             ),
             color=discord.Color.gold(),
         )
 
-        # IMPORTANTE:
-        # O conteúdo de pix NÃO é modificado.
+        # =================================================
+        # COPIA E COLA
+        # =================================================
 
         embed.add_field(
             name="📋 Pix Copia e Cola",
             value=(
-                f"```text\n"
+                "```text\n"
                 f"{pix}\n"
-                f"```"
+                "```"
             ),
             inline=False,
         )
-
-        if ticket_url:
-            embed.add_field(
-                name="🔗 Pagamento Mercado Pago",
-                value=(
-                    f"[Abrir pagamento oficial]"
-                    f"({ticket_url})"
-                ),
-                inline=False,
-            )
 
         embed.set_footer(
             text=(
@@ -594,6 +750,7 @@ class EmailPagamentoModal(Modal):
         # =================================================
 
         arquivo = None
+
         qr_base64 = resultado.get(
             "qr_code_base64"
         )
@@ -601,20 +758,22 @@ class EmailPagamentoModal(Modal):
         if qr_base64:
 
             try:
-                # Algumas respostas podem vir como:
-                # data:image/png;base64,...
-                #
-                # Nesse caso removemos SOMENTE o prefixo.
-                # O conteúdo Base64 permanece intacto.
+
+                # Remove somente o prefixo caso exista.
+                # O conteúdo Base64 não é modificado.
 
                 if qr_base64.startswith(
                     "data:image"
                 ):
+
                     if "," in qr_base64:
-                        qr_base64 = qr_base64.split(
-                            ",",
-                            1,
-                        )[1]
+
+                        qr_base64 = (
+                            qr_base64.split(
+                                ",",
+                                1,
+                            )[1]
+                        )
 
                 imagem = base64.b64decode(
                     qr_base64,
@@ -631,6 +790,7 @@ class EmailPagamentoModal(Modal):
                 )
 
             except Exception as erro:
+
                 print(
                     "❌ Erro processando "
                     f"QR Code: {erro}"
@@ -643,12 +803,14 @@ class EmailPagamentoModal(Modal):
         try:
 
             if arquivo:
+
                 await interaction.channel.send(
                     embed=embed,
                     file=arquivo,
                 )
 
             else:
+
                 await interaction.channel.send(
                     embed=embed
                 )
@@ -660,6 +822,7 @@ class EmailPagamentoModal(Modal):
                 "enviar o PIX neste ticket.",
                 ephemeral=True,
             )
+
             return
 
         except Exception as erro:
@@ -674,12 +837,14 @@ class EmailPagamentoModal(Modal):
                 "no ticket.",
                 ephemeral=True,
             )
+
             return
 
         await interaction.followup.send(
             "✅ **PIX gerado!**\n\n"
-            "Realize o pagamento pelo QR Code "
-            "ou pelo Pix Copia e Cola.\n\n"
+            "Realize o pagamento pelo "
+            "**QR Code** ou pelo "
+            "**Pix Copia e Cola**.\n\n"
             "A confirmação será automática.",
             ephemeral=True,
         )
@@ -692,6 +857,7 @@ class EmailPagamentoModal(Modal):
 class PagamentoView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -712,10 +878,12 @@ class PagamentoView(View):
             interaction.channel,
             discord.TextChannel,
         ):
+
             await interaction.response.send_message(
                 "❌ Canal inválido.",
                 ephemeral=True,
             )
+
             return
 
         produto_id = (
@@ -725,11 +893,13 @@ class PagamentoView(View):
         )
 
         if not produto_id:
+
             await interaction.response.send_message(
                 "❌ Não consegui identificar "
                 "o produto.",
                 ephemeral=True,
             )
+
             return
 
         await interaction.response.send_modal(
@@ -777,6 +947,7 @@ async def gerar_transcript(
             )
 
             if mensagem.content:
+
                 linhas.append(
                     mensagem.content
                 )
@@ -784,6 +955,7 @@ async def gerar_transcript(
             if mensagem.attachments:
 
                 for anexo in mensagem.attachments:
+
                     linhas.append(
                         f"[Anexo] "
                         f"{anexo.filename}: "
@@ -791,6 +963,7 @@ async def gerar_transcript(
                     )
 
             if mensagem.embeds:
+
                 linhas.append(
                     f"[Embed] "
                     f"{len(mensagem.embeds)} embed(s)"
@@ -799,6 +972,7 @@ async def gerar_transcript(
             if mensagem.stickers:
 
                 for sticker in mensagem.stickers:
+
                     linhas.append(
                         f"[Sticker] "
                         f"{sticker.name}"
@@ -822,7 +996,9 @@ async def gerar_transcript(
     ])
 
     arquivo = io.BytesIO(
-        "\n".join(linhas).encode("utf-8")
+        "\n".join(linhas).encode(
+            "utf-8"
+        )
     )
 
     arquivo.seek(0)
@@ -847,9 +1023,12 @@ async def fechar_ticket(
 
         parte = parte.strip()
 
-        if parte.startswith("Cliente:"):
+        if parte.startswith(
+            "Cliente:"
+        ):
 
             try:
+
                 cliente_id = int(
                     parte.split(
                         ":",
@@ -858,6 +1037,7 @@ async def fechar_ticket(
                 )
 
             except ValueError:
+
                 cliente_id = None
 
             break
@@ -881,6 +1061,7 @@ async def fechar_ticket(
     if not cliente:
 
         try:
+
             cliente = (
                 await interaction.guild.fetch_member(
                     cliente_id
@@ -888,6 +1069,7 @@ async def fechar_ticket(
             )
 
         except Exception:
+
             cliente = None
 
     if not cliente:
@@ -983,15 +1165,18 @@ async def fechar_ticket(
         )
 
     except discord.NotFound:
+
         pass
 
     except discord.Forbidden:
+
         print(
             "❌ O bot não tem permissão "
             "para excluir o ticket."
         )
 
     except Exception as erro:
+
         print(
             f"❌ Erro excluindo ticket: {erro}"
         )
@@ -1004,6 +1189,7 @@ async def fechar_ticket(
 class TicketView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -1025,10 +1211,12 @@ class TicketView(View):
             interaction.channel,
             discord.TextChannel,
         ):
+
             await interaction.response.send_message(
                 "❌ Canal inválido.",
                 ephemeral=True,
             )
+
             return
 
         produto_id = (
@@ -1044,6 +1232,7 @@ class TicketView(View):
                 "o produto.",
                 ephemeral=True,
             )
+
             return
 
         await interaction.response.send_modal(
@@ -1072,6 +1261,7 @@ class TicketView(View):
                 "fechar este ticket.",
                 ephemeral=True,
             )
+
             return
 
         await interaction.response.send_message(
@@ -1097,6 +1287,7 @@ class TicketView(View):
 class AnyDeskModal(Modal):
 
     def __init__(self):
+
         super().__init__(
             title="Informar ID do AnyDesk"
         )
@@ -1148,6 +1339,7 @@ class AnyDeskModal(Modal):
 class AnyDeskTutorialView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -1256,6 +1448,7 @@ async def criar_ticket(
             "❌ Produto não encontrado.",
             ephemeral=True,
         )
+
         return
 
     guild = interaction.guild
@@ -1268,6 +1461,7 @@ async def criar_ticket(
             "dentro de um servidor.",
             ephemeral=True,
         )
+
         return
 
     for canal in guild.text_channels:
@@ -1281,6 +1475,7 @@ async def criar_ticket(
                 f"{canal.mention}",
                 ephemeral=True,
             )
+
             return
 
     categoria = interaction.channel.category
@@ -1290,6 +1485,7 @@ async def criar_ticket(
     if bot_member is None:
 
         try:
+
             bot_member = (
                 await guild.fetch_member(
                     bot.user.id
@@ -1297,6 +1493,7 @@ async def criar_ticket(
             )
 
         except Exception:
+
             bot_member = None
 
     if bot_member is None:
@@ -1306,6 +1503,7 @@ async def criar_ticket(
             "as permissões do bot.",
             ephemeral=True,
         )
+
         return
 
     overwrites = {
@@ -1359,6 +1557,7 @@ async def criar_ticket(
             "para criar o ticket.",
             ephemeral=True,
         )
+
         return
 
     except Exception as erro:
@@ -1372,6 +1571,7 @@ async def criar_ticket(
             "criar o ticket.",
             ephemeral=True,
         )
+
         return
 
     embed = discord.Embed(
@@ -1414,6 +1614,7 @@ async def criar_ticket(
         )
 
         try:
+
             await canal.delete(
                 reason=(
                     "Erro ao enviar "
@@ -1422,6 +1623,7 @@ async def criar_ticket(
             )
 
         except Exception:
+
             pass
 
         await interaction.response.send_message(
@@ -1446,6 +1648,7 @@ async def criar_ticket(
 class OtimizacaoView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -1492,6 +1695,7 @@ class OtimizacaoView(View):
 class VitaliciaView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -1521,6 +1725,7 @@ class VitaliciaView(View):
 class CursoView(View):
 
     def __init__(self):
+
         super().__init__(
             timeout=None
         )
@@ -1552,7 +1757,10 @@ async def processar_pagamento_aprovado(
     dados: dict,
 ):
 
-    if dados.get("entregue") is True:
+    if dados.get(
+        "entregue"
+    ) is True:
+
         return True
 
     canal_id = dados.get(
@@ -1845,7 +2053,10 @@ async def verificar_pagamentos():
         pagamentos.items()
     ):
 
-        if dados.get("entregue") is True:
+        if dados.get(
+            "entregue"
+        ) is True:
+
             continue
 
         status = await asyncio.to_thread(
@@ -1858,7 +2069,9 @@ async def verificar_pagamentos():
 
         if status != "approved":
 
-            if dados.get("status") != status:
+            if dados.get(
+                "status"
+            ) != status:
 
                 dados["status"] = status
 
@@ -1877,6 +2090,7 @@ async def verificar_pagamentos():
             alterou = True
 
     if alterou:
+
         salvar_pagamentos()
 
 
@@ -2135,6 +2349,7 @@ async def on_command_error(
         error,
         commands.CommandNotFound,
     ):
+
         return
 
     if isinstance(
