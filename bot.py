@@ -1,4 +1,3 @@
-````python
 import asyncio
 import base64
 import io
@@ -23,7 +22,6 @@ NOME_LOJA = "Tk Otimização"
 LINK_ANYDESK = "https://anydesk.com/pt/downloads"
 ARQUIVO_PAGAMENTOS = "pagamentos.json"
 
-# Horário oficial da loja
 FUSO_BRASILIA = ZoneInfo("America/Sao_Paulo")
 
 HORA_ABERTURA = 13
@@ -40,7 +38,6 @@ CANAL_CURSO = 1544128281408839792
 CANAL_INFORMACOES = 1544129948359327794
 CANAL_FEEDBACK = 1489876080771727473
 
-# Canal do status da loja
 CANAL_STATUS_LOJA = 1539753330585112576
 
 
@@ -131,15 +128,12 @@ PRODUTOS = {
 # =========================================================
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-
 MERCADOPAGO_ACCESS_TOKEN = os.getenv(
     "MERCADOPAGO_ACCESS_TOKEN"
 )
 
 if not DISCORD_TOKEN:
-    print(
-        "❌ ERRO: DISCORD_TOKEN não configurado."
-    )
+    print("❌ ERRO: DISCORD_TOKEN não configurado.")
 
 if not MERCADOPAGO_ACCESS_TOKEN:
     print(
@@ -164,13 +158,10 @@ intents.message_content = True
 
 def carregar_pagamentos():
 
-    if not os.path.exists(
-        ARQUIVO_PAGAMENTOS
-    ):
+    if not os.path.exists(ARQUIVO_PAGAMENTOS):
         return {}
 
     try:
-
         with open(
             ARQUIVO_PAGAMENTOS,
             "r",
@@ -230,14 +221,12 @@ def salvar_pagamentos():
 
 
 # =========================================================
-# STATUS AUTOMÁTICO DA LOJA
+# STATUS DA LOJA
 # =========================================================
 
 def loja_esta_aberta():
 
-    agora = datetime.now(
-        FUSO_BRASILIA
-    )
+    agora = datetime.now(FUSO_BRASILIA)
 
     return (
         HORA_ABERTURA
@@ -264,7 +253,7 @@ async def atualizar_status_loja():
 
             print(
                 "❌ Não consegui encontrar "
-                f"o canal de status da loja: {erro}"
+                f"o canal de status: {erro}"
             )
 
             return
@@ -275,8 +264,8 @@ async def atualizar_status_loja():
     ):
 
         print(
-            "❌ O canal de status da loja "
-            "não é um canal de texto."
+            "❌ O canal de status não é "
+            "um canal de texto."
         )
 
         return
@@ -290,7 +279,6 @@ async def atualizar_status_loja():
         novo_nome = "❌│Loja-off"
 
     if canal.name == novo_nome:
-
         return
 
     try:
@@ -305,29 +293,27 @@ async def atualizar_status_loja():
         )
 
         print(
-            "🏪 Status da loja atualizado: "
-            f"{novo_nome} | "
-            f"{agora.strftime('%d/%m/%Y %H:%M:%S')} "
-            "Brasília"
+            f"🏪 Status atualizado: {novo_nome} | "
+            f"{agora.strftime('%d/%m/%Y %H:%M:%S')}"
         )
 
     except discord.Forbidden:
 
         print(
-            "❌ Não tenho permissão para "
-            "alterar o nome do canal da loja."
+            "❌ Sem permissão para alterar "
+            "o nome do canal de status."
         )
 
     except discord.NotFound:
 
         print(
-            "❌ Canal de status da loja não encontrado."
+            "❌ Canal de status não encontrado."
         )
 
     except Exception as erro:
 
         print(
-            f"❌ Erro atualizando status da loja: {erro}"
+            f"❌ Erro atualizando status: {erro}"
         )
 
 
@@ -358,7 +344,7 @@ def criar_pagamento_pix(
     if not MERCADOPAGO_ACCESS_TOKEN:
 
         print(
-            "❌ MERCADOPAGO_ACCESS_TOKEN "
+            "❌ Access Token do Mercado Pago "
             "não configurado."
         )
 
@@ -368,37 +354,27 @@ def criar_pagamento_pix(
 
     if "@" not in email:
 
-        print(
-            "❌ E-mail inválido."
-        )
+        print("❌ E-mail inválido.")
 
         return None
 
-    parte_dominio = email.split(
-        "@",
-        1,
-    )[1]
+    partes_email = email.split("@")
 
-    if "." not in parte_dominio:
-
-        print(
-            "❌ E-mail inválido."
-        )
-
+    if len(partes_email) != 2:
         return None
 
-    url = (
-        "https://api.mercadopago.com/v1/payments"
-    )
+    if "." not in partes_email[1]:
+        print("❌ E-mail inválido.")
+        return None
+
+    url = "https://api.mercadopago.com/v1/payments"
 
     external_reference = (
         f"discord-{canal_id}-{usuario_id}-"
         f"{uuid.uuid4().hex}"
     )
 
-    idempotency_key = str(
-        uuid.uuid4()
-    )
+    idempotency_key = str(uuid.uuid4())
 
     headers = {
         "Authorization": (
@@ -410,8 +386,9 @@ def criar_pagamento_pix(
     }
 
     dados = {
-        "transaction_amount": float(
-            f"{float(preco):.2f}"
+        "transaction_amount": round(
+            float(preco),
+            2,
         ),
         "description": str(produto)[:250],
         "payment_method_id": "pix",
@@ -421,33 +398,15 @@ def criar_pagamento_pix(
         },
     }
 
-    print(
-        "========================================"
-    )
-
-    print(
-        "💳 CRIANDO PAGAMENTO PIX"
-    )
-
-    print(
-        f"📦 Produto: {produto}"
-    )
-
-    print(
-        f"💰 Valor: R${preco:.2f}"
-    )
-
-    print(
-        f"📧 E-mail: {email}"
-    )
-
-    print(
-        f"🔗 Referência: {external_reference}"
-    )
-
-    print(
-        "========================================"
-    )
+    print("")
+    print("========================================")
+    print("💳 CRIANDO PIX NO MERCADO PAGO")
+    print(f"📦 Produto: {produto}")
+    print(f"💰 Valor: R${preco:.2f}")
+    print(f"📧 E-mail: {email}")
+    print(f"🔑 Idempotency: {idempotency_key}")
+    print(f"🔗 Referência: {external_reference}")
+    print("========================================")
 
     try:
 
@@ -461,15 +420,13 @@ def criar_pagamento_pix(
     except requests.RequestException as erro:
 
         print(
-            "❌ Erro de conexão com "
-            f"Mercado Pago: {erro}"
+            f"❌ Erro de conexão com Mercado Pago: {erro}"
         )
 
         return None
 
     print(
-        "📡 Mercado Pago respondeu: "
-        f"{resposta.status_code}"
+        f"📡 Mercado Pago HTTP: {resposta.status_code}"
     )
 
     try:
@@ -480,23 +437,16 @@ def criar_pagamento_pix(
 
         print(
             "❌ Mercado Pago retornou "
-            "JSON inválido."
+            "uma resposta que não é JSON."
         )
 
-        print(
-            resposta.text
-        )
+        print(resposta.text)
 
         return None
 
-    if resposta.status_code not in (
-        200,
-        201,
-    ):
+    if resposta.status_code not in (200, 201):
 
-        print(
-            "❌ ERRO MERCADO PAGO:"
-        )
+        print("❌ ERRO AO CRIAR PIX:")
 
         print(
             json.dumps(
@@ -508,9 +458,7 @@ def criar_pagamento_pix(
 
         return None
 
-    payment_id = pagamento.get(
-        "id"
-    )
+    payment_id = pagamento.get("id")
 
     if not payment_id:
 
@@ -530,39 +478,52 @@ def criar_pagamento_pix(
         return None
 
     status = pagamento.get(
-        "status"
+        "status",
+        "pending",
     )
 
     status_detail = pagamento.get(
         "status_detail"
     )
 
-    point_of_interaction = pagamento.get(
-        "point_of_interaction",
-        {},
+    external_reference_retorno = (
+        pagamento.get(
+            "external_reference"
+        )
+        or external_reference
     )
+
+    point_of_interaction = pagamento.get(
+        "point_of_interaction"
+    ) or {}
 
     transaction_data = (
         point_of_interaction.get(
-            "transaction_data",
-            {},
+            "transaction_data"
         )
+        or {}
     )
 
-    pix_copia_cola = (
-        transaction_data.get(
-            "qr_code"
-        )
+    pix_copia_cola = transaction_data.get(
+        "qr_code"
     )
 
-    qr_code_base64 = (
-        transaction_data.get(
-            "qr_code_base64"
-        )
+    qr_code_base64 = transaction_data.get(
+        "qr_code_base64"
     )
+
+    ticket_url = transaction_data.get(
+        "ticket_url"
+    )
+
+    if not ticket_url:
+
+        ticket_url = pagamento.get(
+            "ticket_url"
+        )
 
     print(
-        f"💳 Pagamento criado: {payment_id}"
+        f"💳 Payment ID: {payment_id}"
     )
 
     print(
@@ -570,37 +531,30 @@ def criar_pagamento_pix(
     )
 
     print(
-        "📊 Status detail: "
-        f"{status_detail}"
+        f"📊 Status detail: {status_detail}"
     )
 
     print(
-        "💳 Método: "
-        f"{pagamento.get('payment_method_id')}"
-    )
-
-    print(
-        "📋 Pix Copia e Cola encontrado: "
+        f"📋 QR Code/Pix Copia e Cola: "
         f"{bool(pix_copia_cola)}"
     )
 
     print(
-        "🖼️ QR Code encontrado: "
+        f"🖼️ QR Base64: "
         f"{bool(qr_code_base64)}"
     )
 
-    if pix_copia_cola:
-
-        print(
-            "📏 Tamanho do Copia e Cola: "
-            f"{len(pix_copia_cola)} caracteres"
-        )
+    print(
+        f"🔗 Ticket URL: "
+        f"{bool(ticket_url)}"
+    )
 
     if not pix_copia_cola:
 
         print(
-            "❌ Mercado Pago criou o pagamento, "
-            "mas não retornou qr_code."
+            "❌ O pagamento foi criado, "
+            "mas o Mercado Pago não retornou "
+            "o qr_code."
         )
 
         print(
@@ -619,16 +573,17 @@ def criar_pagamento_pix(
 
     return {
         "id": str(payment_id),
-        "status": status or "pending",
+        "status": status,
         "status_detail": status_detail,
-        "external_reference": external_reference,
+        "external_reference": external_reference_retorno,
         "qr_code": pix_copia_cola,
         "qr_code_base64": qr_code_base64,
+        "ticket_url": ticket_url,
     }
 
 
 # =========================================================
-# MERCADO PAGO — CONSULTAR PAGAMENTO
+# CONSULTAR PAGAMENTO
 # =========================================================
 
 def consultar_pagamento(
@@ -670,10 +625,19 @@ def consultar_pagamento(
     if resposta.status_code != 200:
 
         print(
-            f"❌ Erro consultando pagamento "
-            f"{payment_id}: "
-            f"{resposta.status_code}"
+            f"❌ Consulta do pagamento "
+            f"{payment_id} retornou "
+            f"HTTP {resposta.status_code}"
         )
+
+        try:
+
+            print(
+                resposta.text
+            )
+
+        except Exception:
+            pass
 
         return None
 
@@ -684,15 +648,27 @@ def consultar_pagamento(
     except ValueError:
 
         print(
-            f"❌ JSON inválido no pagamento "
+            f"❌ Resposta inválida do pagamento "
             f"{payment_id}."
         )
 
         return None
 
-    return dados.get(
-        "status"
+    status = dados.get("status")
+
+    status_detail = dados.get(
+        "status_detail"
     )
+
+    print(
+        f"🔎 Pagamento {payment_id} → "
+        f"{status} / {status_detail}"
+    )
+
+    return {
+        "status": status,
+        "status_detail": status_detail,
+    }
 
 
 # =========================================================
@@ -708,7 +684,6 @@ def identificar_produto_do_canal(
     for chave in PRODUTOS:
 
         if f"ProdutoID: {chave}" in topic:
-
             return chave
 
     return None
@@ -776,9 +751,13 @@ class EmailPagamentoModal(Modal):
         if not resultado:
 
             await interaction.followup.send(
-                "❌ Não consegui gerar o PIX.\n\n"
-                "Verifique o Access Token do "
-                "Mercado Pago e o e-mail informado.",
+                "❌ **Não consegui gerar o PIX.**\n\n"
+                "Verifique se o "
+                "**MERCADOPAGO_ACCESS_TOKEN** "
+                "está correto e se a conta Mercado "
+                "Pago está configurada para receber PIX.\n\n"
+                "Veja também o console do bot para "
+                "o erro retornado pela API.",
                 ephemeral=True,
             )
 
@@ -814,6 +793,12 @@ class EmailPagamentoModal(Modal):
             "status_detail": resultado.get(
                 "status_detail"
             ),
+            "external_reference": resultado.get(
+                "external_reference"
+            ),
+            "ticket_url": resultado.get(
+                "ticket_url"
+            ),
             "entregue": False,
         }
 
@@ -828,8 +813,8 @@ class EmailPagamentoModal(Modal):
                 f"R${produto['preco']:.2f}\n\n"
                 "🟡 **Status:** "
                 "Aguardando pagamento\n\n"
-                "Escaneie o **QR Code** ou "
-                "use o **Pix Copia e Cola**.\n\n"
+                "Escaneie o **QR Code** abaixo "
+                "ou use o **Pix Copia e Cola**.\n\n"
                 "Após o pagamento, a confirmação "
                 "será automática."
             ),
@@ -837,7 +822,7 @@ class EmailPagamentoModal(Modal):
         )
 
         embed.add_field(
-            name="📋 Pix Copia e Cola",
+            name="📋 PIX COPIA E COLA",
             value=(
                 "```text\n"
                 f"{pix}\n"
@@ -845,6 +830,21 @@ class EmailPagamentoModal(Modal):
             ),
             inline=False,
         )
+
+        ticket_url = resultado.get(
+            "ticket_url"
+        )
+
+        if ticket_url:
+
+            embed.add_field(
+                name="🔗 Pagamento",
+                value=(
+                    f"[Abrir pagamento do Mercado Pago]"
+                    f"({ticket_url})"
+                ),
+                inline=False,
+            )
 
         embed.set_footer(
             text=(
@@ -863,23 +863,40 @@ class EmailPagamentoModal(Modal):
 
             try:
 
-                if qr_base64.startswith(
-                    "data:image"
-                ):
+                # Remove prefixo caso a API retorne:
+                # data:image/png;base64,...
+                if "," in qr_base64:
 
-                    if "," in qr_base64:
-
-                        qr_base64 = (
-                            qr_base64.split(
-                                ",",
-                                1,
-                            )[1]
+                    prefixo, conteudo = (
+                        qr_base64.split(
+                            ",",
+                            1,
                         )
+                    )
+
+                    if (
+                        "base64" in prefixo.lower()
+                    ):
+
+                        qr_base64 = conteudo
+
+                qr_base64 = (
+                    qr_base64
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .strip()
+                )
 
                 imagem = base64.b64decode(
                     qr_base64,
                     validate=True,
                 )
+
+                if not imagem:
+
+                    raise ValueError(
+                        "QR Code vazio."
+                    )
 
                 arquivo = discord.File(
                     io.BytesIO(imagem),
@@ -894,7 +911,7 @@ class EmailPagamentoModal(Modal):
 
                 print(
                     "❌ Erro processando "
-                    f"QR Code: {erro}"
+                    f"QR Code Base64: {erro}"
                 )
 
         try:
@@ -930,7 +947,7 @@ class EmailPagamentoModal(Modal):
 
             await interaction.followup.send(
                 "❌ O PIX foi criado, mas não "
-                "consegui enviar a mensagem "
+                "consegui enviar a cobrança "
                 "no ticket.",
                 ephemeral=True,
             )
@@ -938,11 +955,12 @@ class EmailPagamentoModal(Modal):
             return
 
         await interaction.followup.send(
-            "✅ **PIX gerado!**\n\n"
-            "Realize o pagamento pelo "
-            "**QR Code** ou pelo "
+            "✅ **PIX gerado com sucesso!**\n\n"
+            "Pague pelo **QR Code** ou pelo "
             "**Pix Copia e Cola**.\n\n"
-            "A confirmação será automática.",
+            "💳 Assim que o Mercado Pago "
+            "confirmar o pagamento, o bot "
+            "liberará os cargos automaticamente.",
             ephemeral=True,
         )
 
@@ -993,7 +1011,7 @@ class PagamentoView(View):
 
             await interaction.response.send_message(
                 "❌ Não consegui identificar "
-                "o produto.",
+                "o produto deste ticket.",
                 ephemeral=True,
             )
 
@@ -1044,7 +1062,6 @@ async def gerar_transcript(
             )
 
             if mensagem.content:
-
                 linhas.append(
                     mensagem.content
                 )
@@ -1120,9 +1137,7 @@ async def fechar_ticket(
 
         parte = parte.strip()
 
-        if parte.startswith(
-            "Cliente:"
-        ):
+        if parte.startswith("Cliente:"):
 
             try:
 
@@ -1201,14 +1216,11 @@ async def fechar_ticket(
                 f"📄 **Transcript do seu ticket — "
                 f"{NOME_LOJA}**\n\n"
                 "Seu ticket foi encerrado pela equipe.\n"
-                "O transcript completo do atendimento "
-                "está anexado abaixo."
+                "O transcript completo está anexado."
             ),
             file=discord.File(
                 arquivo,
-                filename=(
-                    f"transcript-{canal.id}.txt"
-                ),
+                filename=f"transcript-{canal.id}.txt",
             ),
         )
 
@@ -1218,8 +1230,7 @@ async def fechar_ticket(
             content=(
                 "⚠️ **Não consegui enviar "
                 "o transcript no PV do cliente.**\n\n"
-                "O ticket **não será excluído** "
-                "para não perder o histórico."
+                "O ticket **não será excluído**."
             )
         )
 
@@ -1234,7 +1245,7 @@ async def fechar_ticket(
         await interaction.edit_original_response(
             content=(
                 "⚠️ Ocorreu um erro ao enviar "
-                "o transcript no PV.\n\n"
+                "o transcript.\n\n"
                 "O ticket **não será excluído**."
             )
         )
@@ -1243,8 +1254,7 @@ async def fechar_ticket(
 
     await interaction.edit_original_response(
         content=(
-            "✅ **Transcript enviado no PV "
-            "do cliente!**\n\n"
+            "✅ **Transcript enviado no PV!**\n\n"
             "🗑️ O ticket será excluído "
             "em **3 segundos**."
         )
@@ -1257,19 +1267,17 @@ async def fechar_ticket(
         await canal.delete(
             reason=(
                 "Ticket fechado — "
-                "transcript enviado ao cliente"
+                "transcript enviado"
             )
         )
 
     except discord.NotFound:
-
         pass
 
     except discord.Forbidden:
 
         print(
-            "❌ O bot não tem permissão "
-            "para excluir o ticket."
+            "❌ Sem permissão para excluir ticket."
         )
 
     except Exception as erro:
@@ -1378,7 +1386,7 @@ class TicketView(View):
 
 
 # =========================================================
-# ANYDESK — MODAL
+# ANYDESK
 # =========================================================
 
 class AnyDeskModal(Modal):
@@ -1485,27 +1493,24 @@ def criar_tutorial_embed():
         description=(
             "Seu pagamento foi "
             "**confirmado com sucesso!** 🎉\n\n"
-            "Agora siga o tutorial abaixo "
-            "para realizar o atendimento.\n\n"
+            "Agora siga o tutorial abaixo.\n\n"
             "**1️⃣ Baixe o AnyDesk**\n"
-            "Clique no botão **📥 Baixar AnyDesk** abaixo.\n\n"
+            "Clique em **📥 Baixar AnyDesk**.\n\n"
             "**2️⃣ Abra o AnyDesk**\n"
             "Depois de baixar, abra o programa.\n\n"
             "**3️⃣ Localize seu ID**\n"
             "Procure o ID exibido na tela principal.\n\n"
             "**4️⃣ Envie seu ID**\n"
-            "Clique em **🔢 Informar meu ID** "
-            "e coloque o número que aparece no AnyDesk.\n\n"
+            "Clique em **🔢 Informar meu ID**.\n\n"
             "📌 Depois de enviar seu ID, aguarde a equipe."
         ),
         color=discord.Color.green(),
     )
 
     embed.add_field(
-        name="📥 Download do AnyDesk",
+        name="📥 Download",
         value=(
-            "Clique em **📥 Baixar AnyDesk** "
-            "para acessar o download oficial."
+            "Clique em **📥 Baixar AnyDesk**."
         ),
         inline=False,
     )
@@ -1513,8 +1518,8 @@ def criar_tutorial_embed():
     embed.add_field(
         name="🔢 Enviar ID",
         value=(
-            "Depois de abrir o AnyDesk, clique em "
-            "**🔢 Informar meu ID**."
+            "Depois de abrir o AnyDesk, "
+            "clique em **🔢 Informar meu ID**."
         ),
         inline=False,
     )
@@ -1561,15 +1566,15 @@ async def criar_ticket(
 
         return
 
-    for canal in guild.text_channels:
+    for canal_existente in guild.text_channels:
 
-        topic = canal.topic or ""
+        topic = canal_existente.topic or ""
 
         if f"Cliente: {membro.id}" in topic:
 
             await interaction.response.send_message(
                 f"❌ Você já possui um ticket: "
-                f"{canal.mention}",
+                f"{canal_existente.mention}",
                 ephemeral=True,
             )
 
@@ -1641,10 +1646,7 @@ async def criar_ticket(
                 f"ProdutoID: {produto_id}"
             ),
             overwrites=overwrites,
-            reason=(
-                f"Compra: "
-                f"{produto['nome']}"
-            ),
+            reason=f"Compra: {produto['nome']}",
         )
 
     except discord.Forbidden:
@@ -1691,7 +1693,7 @@ async def criar_ticket(
     embed.set_footer(
         text=(
             f"{NOME_LOJA} • "
-            "Pagamento seguro via PIX"
+            "Pagamento via PIX"
         )
     )
 
@@ -1706,21 +1708,16 @@ async def criar_ticket(
     except Exception as erro:
 
         print(
-            "❌ Erro enviando "
-            f"painel do ticket: {erro}"
+            f"❌ Erro enviando painel: {erro}"
         )
 
         try:
 
             await canal.delete(
-                reason=(
-                    "Erro ao enviar "
-                    "painel do ticket"
-                )
+                reason="Erro ao enviar painel"
             )
 
         except Exception:
-
             pass
 
         await interaction.response.send_message(
@@ -1854,23 +1851,12 @@ async def processar_pagamento_aprovado(
     dados: dict,
 ):
 
-    if dados.get(
-        "entregue"
-    ) is True:
-
+    if dados.get("entregue") is True:
         return True
 
-    canal_id = dados.get(
-        "channel_id"
-    )
-
-    user_id = dados.get(
-        "user_id"
-    )
-
-    produto_id = dados.get(
-        "produto_id"
-    )
+    canal_id = dados.get("channel_id")
+    user_id = dados.get("user_id")
+    produto_id = dados.get("produto_id")
 
     if not canal_id or not user_id or not produto_id:
 
@@ -1888,8 +1874,7 @@ async def processar_pagamento_aprovado(
     if not produto:
 
         print(
-            f"⚠️ Produto inválido: "
-            f"{produto_id}"
+            f"⚠️ Produto inválido: {produto_id}"
         )
 
         return False
@@ -1909,8 +1894,8 @@ async def processar_pagamento_aprovado(
         except Exception as erro:
 
             print(
-                f"⚠️ Não consegui encontrar "
-                f"o canal {canal_id}: {erro}"
+                f"⚠️ Canal {canal_id} não encontrado: "
+                f"{erro}"
             )
 
             return False
@@ -1919,11 +1904,6 @@ async def processar_pagamento_aprovado(
         canal,
         discord.TextChannel,
     ):
-
-        print(
-            f"⚠️ Canal {canal_id} "
-            "não é canal de texto."
-        )
 
         return False
 
@@ -1944,13 +1924,15 @@ async def processar_pagamento_aprovado(
         except Exception as erro:
 
             print(
-                f"⚠️ Não consegui encontrar "
-                f"o cliente {user_id}: {erro}"
+                f"⚠️ Cliente {user_id} não encontrado: "
+                f"{erro}"
             )
 
             return False
 
     cargos = []
+
+    falhou_cargo = False
 
     for cargo_id in produto["cargos"]:
 
@@ -1961,10 +1943,10 @@ async def processar_pagamento_aprovado(
         if not cargo:
 
             print(
-                f"⚠️ Cargo não encontrado: "
-                f"{cargo_id}"
+                f"⚠️ Cargo não encontrado: {cargo_id}"
             )
 
+            falhou_cargo = True
             continue
 
         try:
@@ -1987,9 +1969,10 @@ async def processar_pagamento_aprovado(
 
             print(
                 f"❌ Não consegui entregar "
-                f"o cargo {cargo.name}. "
-                "Verifique a hierarquia."
+                f"o cargo {cargo.name}."
             )
+
+            falhou_cargo = True
 
         except Exception as erro:
 
@@ -1997,6 +1980,19 @@ async def processar_pagamento_aprovado(
                 f"❌ Erro entregando cargo "
                 f"{cargo.name}: {erro}"
             )
+
+            falhou_cargo = True
+
+    # Não marca como entregue se o bot
+    # não conseguiu entregar algum cargo.
+    if falhou_cargo:
+
+        print(
+            f"⚠️ Pagamento {payment_id} aprovado, "
+            "mas a entrega de cargo falhou."
+        )
+
+        return False
 
     try:
 
@@ -2007,7 +2003,7 @@ async def processar_pagamento_aprovado(
     except Exception as erro:
 
         print(
-            f"⚠️ Erro alterando nome: {erro}"
+            f"⚠️ Erro alterando nome do ticket: {erro}"
         )
 
     embed = discord.Embed(
@@ -2016,14 +2012,12 @@ async def processar_pagamento_aprovado(
             f"Parabéns, "
             f"{membro.mention}! 🎉\n\n"
             "Seu pagamento foi confirmado "
-            "**automaticamente**.\n\n"
+            "**automaticamente pelo Mercado Pago**.\n\n"
             f"📦 **Produto:** "
             f"{produto['nome']}\n"
             f"💰 **Valor:** "
             f"R${produto['preco']:.2f}\n\n"
-            "🎁 Seu acesso já foi liberado.\n\n"
-            "Abaixo está o painel para baixar "
-            "o AnyDesk e seguir o tutorial."
+            "🎁 Seu acesso já foi liberado."
         ),
         color=discord.Color.green(),
     )
@@ -2052,15 +2046,12 @@ async def processar_pagamento_aprovado(
     except Exception as erro:
 
         print(
-            f"❌ Erro enviando aprovação: "
-            f"{erro}"
+            f"❌ Erro enviando aprovação: {erro}"
         )
 
         return False
 
-    tutorial_embed = (
-        criar_tutorial_embed()
-    )
+    tutorial_embed = criar_tutorial_embed()
 
     if TUTORIAL_IMG_1:
 
@@ -2078,8 +2069,7 @@ async def processar_pagamento_aprovado(
     except Exception as erro:
 
         print(
-            f"❌ Erro enviando AnyDesk: "
-            f"{erro}"
+            f"❌ Erro enviando tutorial: {erro}"
         )
 
     if TUTORIAL_IMG_2:
@@ -2101,8 +2091,7 @@ async def processar_pagamento_aprovado(
         except Exception as erro:
 
             print(
-                f"❌ Erro enviando imagem 2: "
-                f"{erro}"
+                f"❌ Erro imagem 2: {erro}"
             )
 
     if TUTORIAL_IMG_3:
@@ -2124,12 +2113,17 @@ async def processar_pagamento_aprovado(
         except Exception as erro:
 
             print(
-                f"❌ Erro enviando imagem 3: "
-                f"{erro}"
+                f"❌ Erro imagem 3: {erro}"
             )
 
     dados["status"] = "approved"
+    dados["status_detail"] = "accredited"
     dados["entregue"] = True
+    dados["approved_at"] = (
+        datetime.now(
+            FUSO_BRASILIA
+        ).isoformat()
+    )
 
     return True
 
@@ -2150,31 +2144,43 @@ async def verificar_pagamentos():
         pagamentos.items()
     ):
 
-        if dados.get(
-            "entregue"
-        ) is True:
-
+        if dados.get("entregue") is True:
             continue
 
-        status = await asyncio.to_thread(
+        consulta = await asyncio.to_thread(
             consultar_pagamento,
             payment_id,
         )
 
-        if status is None:
+        if not consulta:
             continue
+
+        status = consulta.get(
+            "status"
+        )
+
+        status_detail = consulta.get(
+            "status_detail"
+        )
+
+        if (
+            dados.get("status") != status
+            or dados.get("status_detail") != status_detail
+        ):
+
+            dados["status"] = status
+            dados["status_detail"] = status_detail
+
+            alterou = True
+
+            salvar_pagamentos()
 
         if status != "approved":
-
-            if dados.get(
-                "status"
-            ) != status:
-
-                dados["status"] = status
-
-                alterou = True
-
             continue
+
+        print(
+            f"🎉 PAGAMENTO APROVADO: {payment_id}"
+        )
 
         sucesso = (
             await processar_pagamento_aprovado(
@@ -2184,10 +2190,12 @@ async def verificar_pagamentos():
         )
 
         if sucesso:
+
             alterou = True
 
-    if alterou:
+            salvar_pagamentos()
 
+    if alterou:
         salvar_pagamentos()
 
 
@@ -2256,8 +2264,7 @@ class LojaBot(commands.Bot):
         )
 
         print(
-            f"🌐 Servidores: "
-            f"{len(self.guilds)}"
+            f"🌐 Servidores: {len(self.guilds)}"
         )
 
         agora = datetime.now(
@@ -2265,7 +2272,7 @@ class LojaBot(commands.Bot):
         )
 
         print(
-            "🕐 Horário de Brasília: "
+            "🕐 Brasília: "
             f"{agora.strftime('%d/%m/%Y %H:%M:%S')}"
         )
 
@@ -2273,8 +2280,6 @@ class LojaBot(commands.Bot):
             "========================================"
         )
 
-        # Atualiza o status da loja imediatamente
-        # ao iniciar/reconectar o bot.
         await atualizar_status_loja()
 
         if not atualizar_status_loja_loop.is_running():
@@ -2282,7 +2287,7 @@ class LojaBot(commands.Bot):
             atualizar_status_loja_loop.start()
 
             print(
-                "🏪 Status automático da loja iniciado."
+                "🏪 Status automático iniciado."
             )
 
         if not verificar_pagamentos.is_running():
@@ -2297,13 +2302,13 @@ class LojaBot(commands.Bot):
     async def on_disconnect(self):
 
         print(
-            "⚠️ Bot desconectado do Discord."
+            "⚠️ Bot desconectado."
         )
 
     async def on_resumed(self):
 
         print(
-            "🔄 Conexão com Discord restaurada."
+            "🔄 Conexão restaurada."
         )
 
         await atualizar_status_loja()
@@ -2313,7 +2318,7 @@ bot = LojaBot()
 
 
 # =========================================================
-# COMANDO PING
+# PING
 # =========================================================
 
 @bot.command(name="ping")
@@ -2368,7 +2373,7 @@ async def painel_otimizacao(
             "⚙️ **Otimização Básica** — R$15,00\n"
             "🚀 **Otimização Completa** — R$30,00\n\n"
             "Após escolher, será criado "
-            "um ticket privado para você."
+            "um ticket privado."
         ),
         color=discord.Color.blurple(),
     )
@@ -2469,7 +2474,6 @@ async def on_command_error(
         error,
         commands.CommandNotFound,
     ):
-
         return
 
     if isinstance(
@@ -2513,8 +2517,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "Configure a variável "
-            "DISCORD_TOKEN no Laplace."
+            "Configure DISCORD_TOKEN."
         )
 
     elif not MERCADOPAGO_ACCESS_TOKEN:
@@ -2524,8 +2527,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "Configure a variável "
-            "MERCADOPAGO_ACCESS_TOKEN no Laplace."
+            "Configure MERCADOPAGO_ACCESS_TOKEN."
         )
 
     else:
@@ -2549,7 +2551,6 @@ if __name__ == "__main__":
         except Exception as erro:
 
             print(
-                f"❌ Erro fatal ao iniciar "
-                f"o bot: {erro}"
+                f"❌ Erro fatal ao iniciar bot: "
+                f"{erro}"
             )
-````
