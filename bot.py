@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from discord.ui import View, Modal, TextInput
+
 import requests
 import io
 import json
@@ -11,7 +12,7 @@ import base64
 
 
 # =========================================================
-# TOKENS — CONFIGURAR NAS ENVIRONMENT VARIABLES
+# TOKENS — ENVIRONMENT VARIABLES
 # =========================================================
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -33,11 +34,29 @@ ARQUIVO_PAGAMENTOS = "pagamentos.json"
 # IMAGENS DO TUTORIAL
 # =========================================================
 
-TUTORIAL_IMG_1 = "https://media.discordapp.net/attachments/1544158860149915770/1544159894876463154/image.png?ex=6a977e78&is=6a962cf8&hm=6c2d05f6e3874d750f4cc88c691f523889f15cdd190462dbaeaad4ee8759892e&=&format=webp&quality=lossless&width=1280&height=615"
+TUTORIAL_IMG_1 = (
+    "https://media.discordapp.net/attachments/"
+    "1544158860149915770/1544159894876463154/image.png"
+    "?ex=6a977e78&is=6a962cf8&hm="
+    "6c2d05f6e3874d750f4cc88c691f523889f15cdd190462dbaeaad4ee8759892e"
+    "&=&format=webp&quality=lossless&width=1280&height=615"
+)
 
-TUTORIAL_IMG_2 = "https://media.discordapp.net/attachments/1544158860149915770/1544159895291437097/image.png?ex=6a977e78&is=6a962cf8&hm=cb1a80395a1b04d63786ae1b375220bea563499dc831138c2668fb783e9f70f4&=&format=webp&quality=lossless&width=1280&height=620"
+TUTORIAL_IMG_2 = (
+    "https://media.discordapp.net/attachments/"
+    "1544158860149915770/1544159895291437097/image.png"
+    "?ex=6a977e78&is=6a962cf8&hm="
+    "cb1a80395a1b04d63786ae1b375220bea563499dc831138c2668fb783e9f70f4"
+    "&=&format=webp&quality=lossless&width=1280&height=620"
+)
 
-TUTORIAL_IMG_3 = "https://media.discordapp.net/attachments/1544158860149915770/1544159895677304952/image.png?ex=6a977e78&is=6a962cf8&hm=b2a4056756e7f7d13f243c03a118ab81e2e4201d355b9d6bcdaf5aa847dff483&=&format=webp&quality=lossless&width=1280&height=683"
+TUTORIAL_IMG_3 = (
+    "https://media.discordapp.net/attachments/"
+    "1544158860149915770/1544159895677304952/image.png"
+    "?ex=6a977e78&is=6a962cf8&hm="
+    "b2a4056756e7f7d13f243c03a118ab81e2e4201d355b9d6bcdaf5aa847dff483"
+    "&=&format=webp&quality=lossless&width=1280&height=683"
+)
 
 
 # =========================================================
@@ -69,11 +88,8 @@ CARGO_CURSO = 1544128542487355392
 PRODUTOS = {
 
     "basica": {
-
         "nome": "Otimização Básica",
-
         "preco": 15.00,
-
         "cargos": [
             CARGO_COMUM,
             CARGO_OTIMIZACAO
@@ -81,11 +97,8 @@ PRODUTOS = {
     },
 
     "completa": {
-
         "nome": "Otimização Completa",
-
         "preco": 30.00,
-
         "cargos": [
             CARGO_COMUM,
             CARGO_OTIMIZACAO
@@ -93,11 +106,8 @@ PRODUTOS = {
     },
 
     "vitalicia": {
-
         "nome": "Otimização Completa Vitalícia",
-
         "preco": 60.00,
-
         "cargos": [
             CARGO_COMUM,
             CARGO_VITALICIA
@@ -105,11 +115,8 @@ PRODUTOS = {
     },
 
     "curso": {
-
         "nome": "Aprenda a Otimizar",
-
         "preco": 100.00,
-
         "cargos": [
             CARGO_COMUM,
             CARGO_CURSO
@@ -243,9 +250,7 @@ def criar_pagamento_pix(
             external_reference,
 
         "payer": {
-
-            "email":
-                email
+            "email": email
         }
     }
 
@@ -302,16 +307,23 @@ def criar_pagamento_pix(
             str(pagamento["id"]),
 
         "status":
-            pagamento.get("status", "pending"),
+            pagamento.get(
+                "status",
+                "pending"
+            ),
 
         "external_reference":
             external_reference,
 
         "qr_code":
-            transaction_data.get("qr_code"),
+            transaction_data.get(
+                "qr_code"
+            ),
 
         "qr_code_base64":
-            transaction_data.get("qr_code_base64")
+            transaction_data.get(
+                "qr_code_base64"
+            )
     }
 
 
@@ -368,6 +380,23 @@ def consultar_pagamento(payment_id):
 
 
 # =========================================================
+# IDENTIFICAR PRODUTO DO TICKET
+# =========================================================
+
+def identificar_produto_do_canal(canal):
+
+    topic = canal.topic or ""
+
+    for chave in PRODUTOS:
+
+        if f"ProdutoID: {chave}" in topic:
+
+            return chave
+
+    return None
+
+
+# =========================================================
 # MODAL DE E-MAIL
 # =========================================================
 
@@ -393,6 +422,7 @@ class EmailPagamentoModal(Modal):
         )
 
         self.add_item(self.email)
+
 
     async def on_submit(
         self,
@@ -480,11 +510,9 @@ class EmailPagamentoModal(Modal):
 
             description=(
 
-                f"📦 **Produto:** "
-                f"{produto['nome']}\n\n"
+                f"📦 **Produto:** {produto['nome']}\n\n"
 
-                f"💰 **Valor:** "
-                f"R${produto['preco']:.2f}\n\n"
+                f"💰 **Valor:** R${produto['preco']:.2f}\n\n"
 
                 "🟡 **Status:** Aguardando pagamento\n\n"
 
@@ -566,23 +594,6 @@ class EmailPagamentoModal(Modal):
 
 
 # =========================================================
-# IDENTIFICAR PRODUTO DO TICKET
-# =========================================================
-
-def identificar_produto_do_canal(canal):
-
-    topic = canal.topic or ""
-
-    for chave in PRODUTOS:
-
-        if f"ProdutoID: {chave}" in topic:
-
-            return chave
-
-    return None
-
-
-# =========================================================
 # VIEW DO PAGAMENTO
 # =========================================================
 
@@ -604,7 +615,6 @@ class PagamentoView(View):
 
         custom_id="pagar_pix"
     )
-
     async def pagar_pix(
 
         self,
@@ -667,16 +677,10 @@ async def gerar_transcript(canal):
 
     try:
 
-        mensagens = []
-
         async for mensagem in canal.history(
             limit=None,
             oldest_first=True
         ):
-
-            mensagens.append(mensagem)
-
-        for mensagem in mensagens:
 
             data = mensagem.created_at.strftime(
                 "%d/%m/%Y %H:%M:%S"
@@ -702,15 +706,31 @@ async def gerar_transcript(canal):
                 for anexo in mensagem.attachments:
 
                     linhas.append(
+
                         f"[Anexo] {anexo.filename}: "
                         f"{anexo.url}"
+
                     )
 
             if mensagem.embeds:
 
                 linhas.append(
-                    f"[Embed] {len(mensagem.embeds)} embed(s)"
+
+                    f"[Embed] "
+                    f"{len(mensagem.embeds)} embed(s)"
+
                 )
+
+            if mensagem.stickers:
+
+                for sticker in mensagem.stickers:
+
+                    linhas.append(
+
+                        f"[Sticker] "
+                        f"{sticker.name}"
+
+                    )
 
             linhas.append("")
 
@@ -745,10 +765,13 @@ async def gerar_transcript(canal):
 
 
 # =========================================================
-# FECHAR TICKET + ENVIAR TRANSCRIPT NO PV
+# FECHAR TICKET + TRANSCRIPT NO PV
 # =========================================================
 
-async def fechar_ticket(canal, interaction):
+async def fechar_ticket(
+    canal,
+    interaction
+):
 
     topic = canal.topic or ""
 
@@ -763,7 +786,10 @@ async def fechar_ticket(canal, interaction):
             try:
 
                 cliente_id = int(
-                    parte.split(":", 1)[1].strip()
+                    parte.split(
+                        ":",
+                        1
+                    )[1].strip()
                 )
 
             except ValueError:
@@ -774,12 +800,13 @@ async def fechar_ticket(canal, interaction):
 
     if not cliente_id:
 
-        await interaction.followup.send(
+        await interaction.edit_original_response(
 
-            "❌ Não consegui identificar o cliente "
-            "deste ticket. O canal não será excluído.",
-
-            ephemeral=True
+            content=(
+                "❌ Não consegui identificar o cliente "
+                "deste ticket.\n"
+                "O canal não será excluído."
+            )
         )
 
         return
@@ -800,91 +827,116 @@ async def fechar_ticket(canal, interaction):
 
             cliente = None
 
-    await interaction.edit_original_response(
-        content="🔒 Gerando o transcript do ticket..."
-    )
-
-    arquivo = await gerar_transcript(canal)
-
-    arquivo.filename = (
-        f"transcript-{canal.id}.txt"
-    )
-
-    if cliente:
-
-        try:
-
-            await cliente.send(
-
-                content=(
-                    f"📄 **Transcript do seu ticket — "
-                    f"{NOME_LOJA}**\n\n"
-                    "Seu ticket foi encerrado. "
-                    "Estou enviando abaixo o transcript "
-                    "com as mensagens do atendimento."
-                ),
-
-                file=arquivo
-            )
-
-            await interaction.edit_original_response(
-
-                content=(
-                    "✅ Transcript enviado no PV do cliente.\n"
-                    "🗑️ O ticket será excluído em 3 segundos."
-                )
-            )
-
-        except discord.Forbidden:
-
-            await interaction.edit_original_response(
-
-                content=(
-                    "⚠️ Não consegui enviar o transcript "
-                    "no PV do cliente. O ticket **não será "
-                    "excluído** para evitar perder o histórico.\n\n"
-                    "O cliente precisa permitir mensagens "
-                    "diretas deste servidor."
-                )
-            )
-
-            return
-
-        except Exception as erro:
-
-            print(
-                "❌ Erro enviando transcript no PV:",
-                erro
-            )
-
-            await interaction.edit_original_response(
-
-                content=(
-                    "⚠️ Ocorreu um erro ao enviar o transcript "
-                    "no PV. O ticket **não será excluído**."
-                )
-            )
-
-            return
-
-    else:
+    if not cliente:
 
         await interaction.edit_original_response(
 
             content=(
                 "⚠️ Não consegui encontrar o cliente "
-                "deste ticket. O canal não será excluído."
+                "deste ticket.\n\n"
+                "O ticket não será excluído."
             )
         )
 
         return
+
+    await interaction.edit_original_response(
+
+        content=(
+            "📄 Gerando o transcript do ticket..."
+        )
+    )
+
+    arquivo = await gerar_transcript(
+        canal
+    )
+
+    arquivo.filename = (
+        f"transcript-{canal.id}.txt"
+    )
+
+    try:
+
+        await cliente.send(
+
+            content=(
+
+                f"📄 **Transcript do seu ticket — "
+                f"{NOME_LOJA}**\n\n"
+
+                "Seu ticket foi encerrado pela equipe.\n"
+
+                "O transcript completo do atendimento "
+                "está anexado abaixo."
+
+            ),
+
+            file=arquivo
+        )
+
+    except discord.Forbidden:
+
+        await interaction.edit_original_response(
+
+            content=(
+
+                "⚠️ **Não consegui enviar o transcript "
+                "no PV do cliente.**\n\n"
+
+                "O ticket **não será excluído** para "
+                "não perder o histórico.\n\n"
+
+                "Peça para o cliente permitir mensagens "
+                "diretas deste servidor e tente fechar "
+                "novamente."
+
+            )
+        )
+
+        return
+
+    except Exception as erro:
+
+        print(
+            "❌ Erro enviando transcript no PV:",
+            erro
+        )
+
+        await interaction.edit_original_response(
+
+            content=(
+
+                "⚠️ Ocorreu um erro ao enviar o transcript "
+                "no PV.\n\n"
+
+                "O ticket **não será excluído**."
+
+            )
+        )
+
+        return
+
+    await interaction.edit_original_response(
+
+        content=(
+
+            "✅ **Transcript enviado no PV do cliente!**\n\n"
+
+            "🗑️ O ticket será excluído em **3 segundos**."
+
+        )
+    )
 
     await asyncio.sleep(3)
 
     try:
 
         await canal.delete(
-            reason="Ticket fechado — transcript enviado ao cliente"
+
+            reason=(
+                "Ticket fechado — "
+                "transcript enviado ao cliente"
+            )
         )
 
     except discord.NotFound:
@@ -933,7 +985,6 @@ class TicketView(View):
 
         row=0
     )
-
     async def pagar_pix(
 
         self,
@@ -964,7 +1015,7 @@ class TicketView(View):
         )
 
     # =====================================================
-    # FECHAR TICKET
+    # FECHAR
     # =====================================================
 
     @discord.ui.button(
@@ -979,7 +1030,6 @@ class TicketView(View):
 
         row=0
     )
-
     async def fechar(
 
         self,
@@ -1004,7 +1054,9 @@ class TicketView(View):
         )
 
         await fechar_ticket(
+
             interaction.channel,
+
             interaction
         )
 
@@ -1039,6 +1091,7 @@ class AnyDeskModal(Modal):
         )
 
     async def on_submit(
+
         self,
         interaction: discord.Interaction
     ):
@@ -1057,6 +1110,7 @@ class AnyDeskModal(Modal):
 
                 "✅ Seu ID foi enviado para a equipe.\n"
                 "Aguarde o atendimento."
+
             ),
 
             color=discord.Color.green()
@@ -1086,26 +1140,33 @@ class AnyDeskTutorialView(View):
             timeout=None
         )
 
-    @discord.ui.button(
+        # =================================================
+        # BOTÃO DE LINK
+        # =================================================
+        # Link button não usa @discord.ui.button com url.
+        # Ele é criado diretamente aqui.
 
-        label="Baixar AnyDesk",
+        botao_download = discord.ui.Button(
 
-        emoji="📥",
+            label="Baixar AnyDesk",
 
-        style=discord.ButtonStyle.link,
+            emoji="📥",
 
-        url=LINK_ANYDESK,
+            style=discord.ButtonStyle.link,
 
-        row=0
-    )
+            url=LINK_ANYDESK,
 
-    async def baixar_anydesk(
-        self,
-        interaction,
-        button
-    ):
+            row=0
+        )
 
-        pass
+        self.add_item(
+            botao_download
+        )
+
+
+    # =====================================================
+    # INFORMAR ID
+    # =====================================================
 
     @discord.ui.button(
 
@@ -1119,7 +1180,6 @@ class AnyDeskTutorialView(View):
 
         row=0
     )
-
     async def informar_id(
 
         self,
@@ -1128,12 +1188,13 @@ class AnyDeskTutorialView(View):
     ):
 
         await interaction.response.send_modal(
+
             AnyDeskModal()
         )
 
 
 # =========================================================
-# CRIAR EMBED DO TUTORIAL
+# EMBED DO TUTORIAL
 # =========================================================
 
 def criar_tutorial_embed():
@@ -1150,7 +1211,7 @@ def criar_tutorial_embed():
             "realizar o atendimento.\n\n"
 
             "**1️⃣ Baixe o AnyDesk**\n"
-            "Clique no botão **Baixar AnyDesk** abaixo.\n\n"
+            "Clique no botão **📥 Baixar AnyDesk** abaixo.\n\n"
 
             "**2️⃣ Abra o AnyDesk**\n"
             "Depois de baixar, abra o programa.\n\n"
@@ -1159,10 +1220,11 @@ def criar_tutorial_embed():
             "Procure o ID exibido na tela principal.\n\n"
 
             "**4️⃣ Envie seu ID**\n"
-            "Clique em **Informar meu ID** e coloque "
+            "Clique em **🔢 Informar meu ID** e coloque "
             "o número que aparece no AnyDesk.\n\n"
 
             "📌 Depois de enviar seu ID, aguarde a equipe."
+
         ),
 
         color=discord.Color.green()
@@ -1173,8 +1235,8 @@ def criar_tutorial_embed():
         name="📥 Download do AnyDesk",
 
         value=(
-            "Clique em **Baixar AnyDesk** para acessar "
-            "o download oficial."
+            "Clique em **📥 Baixar AnyDesk** "
+            "para acessar o download oficial."
         ),
 
         inline=False
@@ -1186,7 +1248,7 @@ def criar_tutorial_embed():
 
         value=(
             "Depois de abrir o AnyDesk, clique em "
-            "**Informar meu ID**."
+            "**🔢 Informar meu ID**."
         ),
 
         inline=False
@@ -1205,6 +1267,7 @@ def criar_tutorial_embed():
 # =========================================================
 
 async def criar_ticket(
+
     interaction,
     produto_id
 ):
@@ -1214,6 +1277,7 @@ async def criar_ticket(
     guild = interaction.guild
 
     membro = interaction.user
+
 
     # =====================================================
     # VERIFICAR TICKET EXISTENTE
@@ -1235,11 +1299,13 @@ async def criar_ticket(
 
                 return
 
+
     # =====================================================
     # CATEGORIA
     # =====================================================
 
     categoria = interaction.channel.category
+
 
     # =====================================================
     # PERMISSÕES
@@ -1284,6 +1350,7 @@ async def criar_ticket(
             )
     }
 
+
     # =====================================================
     # CRIAR CANAL
     # =====================================================
@@ -1305,8 +1372,9 @@ async def criar_ticket(
         reason=f"Compra: {produto['nome']}"
     )
 
+
     # =====================================================
-    # PAINEL DO PEDIDO
+    # PAINEL DO PEDIDO — COMPACTO
     # =====================================================
 
     embed = discord.Embed(
@@ -1315,21 +1383,16 @@ async def criar_ticket(
 
         description=(
 
-            f"Olá, {membro.mention}! 👋\n\n"
+            f"📦 **Produto:** {produto['nome']}\n"
+            f"💰 **Valor:** R${produto['preco']:.2f}\n"
+            f"🟡 **Status:** Aguardando pagamento\n\n"
 
-            f"📦 **Produto:** "
-            f"{produto['nome']}\n"
+            "Clique em **💳 Pagar com PIX** "
+            "para gerar seu pagamento.\n\n"
 
-            f"💰 **Valor:** "
-            f"R${produto['preco']:.2f}\n\n"
+            "Após a confirmação, o acesso será "
+            "liberado automaticamente."
 
-            "🟡 **Status:** Aguardando pagamento\n\n"
-
-            "Clique em **💳 Pagar com PIX** para gerar "
-            "seu pagamento.\n\n"
-
-            "Quando o pagamento for confirmado, "
-            "o acesso será liberado automaticamente."
         ),
 
         color=discord.Color.gold()
@@ -1340,8 +1403,9 @@ async def criar_ticket(
         text=f"{NOME_LOJA} • Pagamento seguro via PIX"
     )
 
+
     # =====================================================
-    # PAINEL COM OS DOIS BOTÕES JUNTOS
+    # OS DOIS BOTÕES FICAM JUNTOS NA MESMA LINHA
     # =====================================================
 
     await canal.send(
@@ -1352,6 +1416,7 @@ async def criar_ticket(
 
         view=TicketView()
     )
+
 
     # =====================================================
     # CONFIRMAÇÃO
@@ -1388,17 +1453,20 @@ class OtimizacaoView(View):
 
         custom_id="otimizacao_basica"
     )
-
     async def basica(
+
         self,
         interaction,
         button
     ):
 
         await criar_ticket(
+
             interaction,
+
             "basica"
         )
+
 
     @discord.ui.button(
 
@@ -1410,15 +1478,17 @@ class OtimizacaoView(View):
 
         custom_id="otimizacao_completa"
     )
-
     async def completa(
+
         self,
         interaction,
         button
     ):
 
         await criar_ticket(
+
             interaction,
+
             "completa"
         )
 
@@ -1445,15 +1515,17 @@ class VitaliciaView(View):
 
         custom_id="otimizacao_vitalicia"
     )
-
     async def vitalicia(
+
         self,
         interaction,
         button
     ):
 
         await criar_ticket(
+
             interaction,
+
             "vitalicia"
         )
 
@@ -1480,15 +1552,17 @@ class CursoView(View):
 
         custom_id="curso_otimizacao"
     )
-
     async def curso(
+
         self,
         interaction,
         button
     ):
 
         await criar_ticket(
+
             interaction,
+
             "curso"
         )
 
@@ -1501,6 +1575,7 @@ class CursoView(View):
 async def verificar_pagamentos():
 
     if not pagamentos:
+
         return
 
     alterou = False
@@ -1510,6 +1585,7 @@ async def verificar_pagamentos():
     ):
 
         if dados.get("status") == "approved":
+
             continue
 
         status = await asyncio.to_thread(
@@ -1520,7 +1596,9 @@ async def verificar_pagamentos():
         )
 
         if status != "approved":
+
             continue
+
 
         # =================================================
         # PAGAMENTO APROVADO
@@ -1530,35 +1608,58 @@ async def verificar_pagamentos():
 
         alterou = True
 
+
         # =================================================
         # LOCALIZAR CANAL
         # =================================================
 
         canal = bot.get_channel(
-            int(dados["channel_id"])
+
+            int(
+                dados["channel_id"]
+            )
         )
 
         if not canal:
+
             continue
 
         guild = canal.guild
 
         membro = guild.get_member(
-            int(dados["user_id"])
+
+            int(
+                dados["user_id"]
+            )
         )
 
         if not membro:
-            continue
+
+            try:
+
+                membro = await guild.fetch_member(
+
+                    int(
+                        dados["user_id"]
+                    )
+                )
+
+            except Exception:
+
+                continue
+
 
         produto = PRODUTOS[
+
             dados["produto_id"]
         ]
 
-        cargos = []
 
         # =================================================
         # ENTREGAR CARGOS
         # =================================================
+
+        cargos = []
 
         for cargo_id in produto["cargos"]:
 
@@ -1569,20 +1670,24 @@ async def verificar_pagamentos():
             if not cargo:
 
                 print(
+
                     f"⚠️ Cargo não encontrado: "
                     f"{cargo_id}"
+
                 )
 
                 continue
 
             try:
 
-                await membro.add_roles(
+                if cargo not in membro.roles:
 
-                    cargo,
+                    await membro.add_roles(
 
-                    reason="Pagamento PIX aprovado"
-                )
+                        cargo,
+
+                        reason="Pagamento PIX aprovado"
+                    )
 
                 cargos.append(
                     cargo.mention
@@ -1591,16 +1696,21 @@ async def verificar_pagamentos():
             except discord.Forbidden:
 
                 print(
+
                     f"❌ Não consegui entregar "
                     f"{cargo.name}"
+
                 )
 
             except Exception as erro:
 
                 print(
+
                     f"❌ Erro entregando cargo "
                     f"{cargo.name}: {erro}"
+
                 )
+
 
         # =================================================
         # MUDAR NOME DO TICKET
@@ -1609,18 +1719,23 @@ async def verificar_pagamentos():
         try:
 
             await canal.edit(
+
                 name="🟢・pago"
+
             )
 
         except Exception as erro:
 
             print(
+
                 "❌ Erro alterando nome do canal:",
                 erro
+
             )
 
+
         # =================================================
-        # PAGAMENTO APROVADO
+        # EMBED PAGAMENTO APROVADO
         # =================================================
 
         embed = discord.Embed(
@@ -1644,6 +1759,7 @@ async def verificar_pagamentos():
 
                 "Abaixo está o painel para baixar "
                 "o AnyDesk e seguir o tutorial."
+
             ),
 
             color=discord.Color.green()
@@ -1665,57 +1781,44 @@ async def verificar_pagamentos():
             text=f"{NOME_LOJA} • Pagamento confirmado"
         )
 
+
         try:
 
             await canal.send(
+
                 embed=embed
             )
 
         except Exception as erro:
 
             print(
+
                 "❌ Erro enviando aprovação:",
                 erro
             )
 
+
         # =================================================
-        # TUTORIAL
+        # PAINEL DO ANYDESK
         # =================================================
 
         tutorial_embed = criar_tutorial_embed()
 
-        # =================================================
-        # IMAGENS DO TUTORIAL
-        # =================================================
-
-        imagens = [
-
-            TUTORIAL_IMG_1,
-            TUTORIAL_IMG_2,
-            TUTORIAL_IMG_3
-        ]
-
-        imagens_validas = [
-
-            imagem
-
-            for imagem in imagens
-
-            if imagem
-        ]
 
         # =================================================
         # PRIMEIRA IMAGEM
         # =================================================
 
-        if imagens_validas:
+        if TUTORIAL_IMG_1:
 
             tutorial_embed.set_image(
-                url=imagens_validas[0]
+
+                url=TUTORIAL_IMG_1
             )
 
+
         # =================================================
-        # ENVIAR PAINEL DO ANYDESK
+        # ENVIAR PAINEL + BOTÕES
         # =================================================
 
         try:
@@ -1730,36 +1833,75 @@ async def verificar_pagamentos():
         except Exception as erro:
 
             print(
-                "❌ Erro enviando tutorial:",
+
+                "❌ Erro enviando painel AnyDesk:",
                 erro
             )
 
+
         # =================================================
-        # ENVIAR IMAGENS 2 E 3
+        # IMAGEM 2
         # =================================================
 
-        for imagem_url in imagens_validas[1:]:
+        if TUTORIAL_IMG_2:
 
             try:
 
                 imagem_embed = discord.Embed(
+
                     color=discord.Color.blurple()
                 )
 
                 imagem_embed.set_image(
-                    url=imagem_url
+
+                    url=TUTORIAL_IMG_2
                 )
 
                 await canal.send(
+
                     embed=imagem_embed
                 )
 
             except Exception as erro:
 
                 print(
-                    "❌ Erro enviando imagem "
-                    f"do tutorial: {erro}"
+
+                    "❌ Erro enviando imagem 2:",
+                    erro
                 )
+
+
+        # =================================================
+        # IMAGEM 3
+        # =================================================
+
+        if TUTORIAL_IMG_3:
+
+            try:
+
+                imagem_embed = discord.Embed(
+
+                    color=discord.Color.blurple()
+                )
+
+                imagem_embed.set_image(
+
+                    url=TUTORIAL_IMG_3
+                )
+
+                await canal.send(
+
+                    embed=imagem_embed
+                )
+
+            except Exception as erro:
+
+                print(
+
+                    "❌ Erro enviando imagem 3:",
+                    erro
+                )
+
 
     # =====================================================
     # SALVAR
@@ -1784,6 +1926,7 @@ class LojaBot(commands.Bot):
 
             intents=intents
         )
+
 
     async def setup_hook(self):
 
@@ -1815,6 +1958,7 @@ class LojaBot(commands.Bot):
             AnyDeskTutorialView()
         )
 
+
         # =================================================
         # PAGAMENTOS
         # =================================================
@@ -1822,6 +1966,7 @@ class LojaBot(commands.Bot):
         if not verificar_pagamentos.is_running():
 
             verificar_pagamentos.start()
+
 
         print(
             "✅ Botões persistentes carregados!"
@@ -1858,6 +2003,14 @@ async def on_ready():
 
     print(
         "🔄 Verificação de pagamentos a cada 10 segundos."
+    )
+
+    print(
+        "📄 Sistema de transcript automático online."
+    )
+
+    print(
+        "📩 Transcript será enviado no PV antes de excluir."
     )
 
     if TUTORIAL_IMG_1:
