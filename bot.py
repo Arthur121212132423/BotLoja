@@ -57,25 +57,43 @@ CARGO_ATENDENTE = 1489876080260026461
 # =========================================================
 
 DESCRICAO_CANAL_INFORMACOES = (
-    "🛒 COMO FUNCIONA A LOJA\n\n"
+    "🛒 COMO FUNCIONA A TK OTIMIZAÇÃO\n\n"
     "1️⃣ ESCOLHA SEU PRODUTO\n"
-    "Confira os produtos disponíveis e escolha a otimização "
-    "ou serviço que deseja adquirir.\n\n"
+    "Confira os produtos disponíveis nos canais da loja "
+    "e escolha a otimização ou serviço que deseja adquirir.\n\n"
+
     "2️⃣ ABRA SEU TICKET\n"
-    "Clique no botão de compra para abrir um atendimento "
-    "privado com a equipe.\n\n"
-    "3️⃣ REALIZE O PAGAMENTO\n"
-    "O pagamento é realizado via PIX de forma rápida e segura.\n\n"
-    "4️⃣ CONFIRMAÇÃO AUTOMÁTICA\n"
-    "Após o pagamento ser aprovado pelo Mercado Pago, "
-    "o sistema identifica automaticamente a confirmação.\n\n"
-    "5️⃣ RECEBA SEU ATENDIMENTO\n"
-    "Após a confirmação, seu pedido será liberado e você "
-    "receberá as instruções necessárias para continuar o atendimento.\n\n"
-    "🕐 HORÁRIO DE ATENDIMENTO: 13:00 ÀS 21:00\n"
+    "Clique no botão de compra do produto escolhido. "
+    "Um ticket privado será criado automaticamente para você "
+    "e para a equipe de atendimento.\n\n"
+
+    "3️⃣ GERE O PAGAMENTO\n"
+    "Dentro do ticket, clique em 💳 Pagar com PIX. "
+    "Informe seu e-mail para gerar o pagamento.\n\n"
+
+    "4️⃣ PAGUE VIA PIX\n"
+    "Use o QR Code ou o Pix Copia e Cola disponibilizado "
+    "pelo sistema para realizar o pagamento.\n\n"
+
+    "5️⃣ CONFIRMAÇÃO AUTOMÁTICA\n"
+    "Depois que o pagamento for aprovado pelo Mercado Pago, "
+    "o sistema verifica automaticamente a confirmação. "
+    "Não é necessário enviar comprovante.\n\n"
+
+    "6️⃣ ACESSO LIBERADO\n"
+    "Após a confirmação, os cargos correspondentes ao produto "
+    "são liberados automaticamente no servidor.\n\n"
+
+    "7️⃣ ATENDIMENTO\n"
+    "Depois da aprovação, o ticket recebe as instruções "
+    "necessárias para continuar o atendimento e, quando "
+    "necessário, utilizar o AnyDesk.\n\n"
+
+    "🕐 HORÁRIO DA LOJA: 13:00 ÀS 21:00\n"
     "💳 PAGAMENTO: PIX\n"
-    "🎫 ATENDIMENTO: SISTEMA DE TICKETS\n"
-    "🔒 CADA TICKET É PRIVADO E VISÍVEL PARA O CLIENTE E A EQUIPE."
+    "⚡ CONFIRMAÇÃO: AUTOMÁTICA\n"
+    "🎫 ATENDIMENTO: TICKET PRIVADO\n"
+    "🔒 O TICKET É VISÍVEL PARA O CLIENTE E A EQUIPE."
 )
 
 
@@ -239,14 +257,26 @@ async def atualizar_descricao_canal_informacoes():
 
     if canal is None:
         try:
-            canal = await bot.fetch_channel(
-                CANAL_INFORMACOES
+            canal = await bot.fetch_channel(CANAL_INFORMACOES)
+
+        except discord.NotFound:
+            print(
+                f"❌ Canal Como Funciona "
+                f"({CANAL_INFORMACOES}) não encontrado."
             )
+            return
+
+        except discord.Forbidden:
+            print(
+                "❌ Não tenho permissão para acessar "
+                "o canal Como Funciona."
+            )
+            return
 
         except Exception as erro:
             print(
-                f"❌ Não consegui encontrar o canal "
-                f"Como Funciona: {erro}"
+                f"❌ Erro encontrando o canal Como Funciona: "
+                f"{erro}"
             )
             return
 
@@ -258,13 +288,6 @@ async def atualizar_descricao_canal_informacoes():
         return
 
     try:
-        if canal.topic == DESCRICAO_CANAL_INFORMACOES:
-            print(
-                "ℹ️ Descrição do canal Como Funciona "
-                "já está atualizada."
-            )
-            return
-
         await canal.edit(
             topic=DESCRICAO_CANAL_INFORMACOES,
             reason="Atualização automática da descrição da loja",
@@ -272,7 +295,7 @@ async def atualizar_descricao_canal_informacoes():
 
         print(
             "✅ Descrição do canal Como Funciona "
-            "atualizada com sucesso."
+            "atualizada automaticamente."
         )
 
     except discord.Forbidden:
@@ -2186,8 +2209,11 @@ class LojaBot(commands.Bot):
             "========================================"
         )
 
+        # Atualiza automaticamente o status da loja
         await atualizar_status_loja()
 
+        # Atualiza automaticamente a descrição
+        # do canal Como Funciona a cada inicialização
         await atualizar_descricao_canal_informacoes()
 
         if not atualizar_status_loja_loop.is_running():
